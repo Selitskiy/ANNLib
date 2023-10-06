@@ -36,9 +36,9 @@ classdef BaseNet2D
             net.t_out = t_out;
             net.n_out = y_out * t_out;
 
-            mult = 1;
-            net.k_hid1 = floor(mult * (net.m_in + 1));
-            net.k_hid2 = floor(mult * (2*net.m_in + 1));
+            mult = t_out; %net.n_out; %1;
+            net.k_hid1 = floor(mult * net.m_in);
+            net.k_hid2 = floor(mult * 2*net.m_in) + 1;
             net.ini_rate = ini_rate;
             net.max_epoch = max_epoch;
 

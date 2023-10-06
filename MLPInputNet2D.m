@@ -16,6 +16,7 @@ classdef MLPInputNet2D
             net.mb_size = 2^floor(log2(k_ob)-4);
             if net.mb_size < 32
                 net.mb_size = floor(k_ob/4);
+                %net.mb_size = 8;
             end
         end
 

@@ -1,10 +1,10 @@
-classdef TransLayers2D
+classdef DpTransLayers2D
     properties
     end
 
     methods
 
-        function net = TransLayers2D()
+        function net = DpTransLayers2D()
         end
 
 
@@ -13,9 +13,9 @@ classdef TransLayers2D
             layers = [
                 featureInputLayer(net.m_in)
                 fullyConnectedLayer(net.k_hid1)
-                transformerLayer(net.k_hid1, "k_hid1")
+                dpTransformerLayer(net.k_hid1, "k_hid1")
                 fullyConnectedLayer(net.k_hid2)
-                transformerLayer(net.k_hid2, "k_hid2")
+                dpTransformerLayer(net.k_hid2, "k_hid2")
                 fullyConnectedLayer(net.n_out)
                 regressionLayer
             ];
