@@ -8,7 +8,7 @@ classdef transformerLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optiona
         % Number input channels
         numInChannels
         numOutChannels
-        sqrt_dk
+        %sqrt_dk
     end
 
     properties (Learnable)
@@ -17,11 +17,11 @@ classdef transformerLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optiona
         % Weights
         Wq
         Wk
-        %Wv
+        Wv
         %Bias
         Wq0
         Wk0
-        %Wv0
+        Wv0
     end
 
     %properties (State)
@@ -51,7 +51,7 @@ classdef transformerLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optiona
             layer.Description = "Transformer" + numInChannels + " channels";
 
             layer.numInChannels = numInChannels;
-            layer.sqrt_dk = sqrt(numInChannels);
+            %layer.sqrt_dk = sqrt(numInChannels);
             layer.numOutChannels = numInChannels;
 
             % Initialize weight coefficients.
@@ -63,8 +63,8 @@ classdef transformerLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optiona
             layer.Wk = bound * (2. * rand([layer.numOutChannels, layer.numInChannels],'single') - 1.);
             layer.Wk0 = zeros([layer.numOutChannels, 1]);
 
-            %layer.Wv = bound * (2. * rand([layer.numOutChannels, layer.numInChannels],'single') - 1.);
-            %layer.Wv0 = zeros([layer.numOutChannels, 1]);
+            layer.Wv = bound * (2. * rand([layer.numOutChannels, layer.numInChannels],'single') - 1.);
+            layer.Wv0 = zeros([layer.numOutChannels, 1]);
         end
 
         function [Z] = predict(layer, X)
@@ -93,7 +93,7 @@ classdef transformerLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optiona
 
             K = layer.Wk * X + layer.Wk0;
             Q = layer.Wq * X + layer.Wq0;
-            %V = layer.Wv * X + layer.Wv0;
+            V = layer.Wv * X + layer.Wv0;
 
             %%dk = max(K' * K, [], 'all');
             %%dq = max(Q' * Q, [], 'all');
@@ -103,9 +103,9 @@ classdef transformerLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optiona
             Y = (Q' * K) ./ (dk + dq);
             %Y = (Q' * K) ./ layer.sqrt_dk;
 
-            %Z = V * softmax(Y', 'DataFormat', 'CB');
-            SM = softmax(Y', 'DataFormat', 'CB');
-            Z = X * SM;
+            Z = V * softmax(Y', 'DataFormat', 'CB');
+            %SM = softmax(Y', 'DataFormat', 'CB');
+            %Z = X * SM;
 
             %fprintf('state c=%d n=%d\n', c, n);
         end

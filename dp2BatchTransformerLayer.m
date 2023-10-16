@@ -1,4 +1,4 @@
-classdef GaussianRBFLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
+classdef dp2BatchTransformerLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
 
     properties
         % (Optional) Layer properties.
@@ -7,20 +7,20 @@ classdef GaussianRBFLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optiona
 
         % Number input channels
         numInChannels
-        %numOutChannels
+        numOutChannels
     end
 
     properties (Learnable)
         % (Optional) Layer learnable parameters.
-
-        % Declare learnable parameters here.
-        C
-        B
         
         % Weights
-        %W
+        Wq
+        Wk
+        %Wv
         %Bias
-        %W0
+        Wq0
+        Wk0
+        %Wv0
     end
 
     %properties (State)
@@ -37,7 +37,7 @@ classdef GaussianRBFLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optiona
     %end
 
     methods
-        function layer = GaussianRBFLayer(name, numInChannels) %, numOutChannels)
+        function layer = dp2BatchTransformerLayer(numInChannels, name)
             % (Optional) Create a myLayer.
             % This function must have the same name as the class.
 
@@ -47,27 +47,25 @@ classdef GaussianRBFLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optiona
             layer.Name = name;
 
             % Set layer description.
-            layer.Description = "Gaussian with " + numInChannels + " channels";
+            layer.Description = "Transformer" + numInChannels + " channels";
 
             layer.numInChannels = numInChannels;
-            %layer.numOutChannels = numOutChannels;
-
-            % Initialize scaling coefficient.
-            bound = 1; %0.5; %sqrt(6 / layer.numInChannels);
-            layer.C = bound * rand([numInChannels 1]);% + 0.25; 
-            layer.B = bound * rand([numInChannels 1]);% + 0.25; 
+            layer.numOutChannels = numInChannels;
 
             % Initialize weight coefficients.
-            %%layer.W = rand([layer.numOutChannels, layer.numInChannels]);
-            %bound = sqrt(6 / (layer.numOutChannels + layer.numInChannels));
-            %layer.W = bound * (2. * rand([layer.numOutChannels, layer.numInChannels],'single') - 1.);
+            bound = sqrt(6 / (layer.numOutChannels + layer.numInChannels));
+            
+            layer.Wq = bound * (2. * rand([layer.numOutChannels, layer.numInChannels],'single') - 1.);
+            layer.Wq0 = zeros([layer.numOutChannels, 1]);
 
-            %%layer.W0 = rand([layer.numOutChannels, 1]);
-            %layer.W0 = zeros([layer.numOutChannels, 1]);
+            layer.Wk = bound * (2. * rand([layer.numOutChannels, layer.numInChannels],'single') - 1.);
+            layer.Wk0 = zeros([layer.numOutChannels, 1]);
 
+            %layer.Wv = bound * (2. * rand([layer.numOutChannels, layer.numInChannels],'single') - 1.);
+            %layer.Wv0 = zeros([layer.numOutChannels, 1]);
         end
 
-        function Z = predict(layer, X)
+        function [Z] = predict(layer, X)
             % Forward input data through the layer at prediction time and
             % output the result and updated state.
             %
@@ -87,12 +85,39 @@ classdef GaussianRBFLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optiona
             %    parameters.
 
             % Define layer predict function here.
-
+            % c - channels, n - observations
             [c, n] = size(X);
 
-            Z = exp(-(layer.B .* (X - layer.C)) .^ 2);
-            %Z = layer.W * exp((-layer.B) .* ((X - layer.C) .^ 2)) + layer.W0;
 
+            K = layer.Wk * X + layer.Wk0;
+            Q = layer.Wq * X + layer.Wq0;
+            %V = layer.Wv * X + layer.Wv0;
+
+
+            DKB2 = sum(K' .* K', 1);
+            DQB2 = sum(Q' .* Q', 1);
+            DQKB2 = DQB2' * DKB2;
+            DQKB = sqrt(DQKB2);
+
+            YB = (Q * K') ./ DQKB;
+
+            SM = softmax(YB, 'DataFormat', 'CB');
+            ZT = X' * SM;
+            %Z = ZT';
+
+                        
+            
+            DK2 = sum(K .* K, 1);
+            DQ2 = sum(Q .* Q, 1);
+            DQK2 = DQ2' * DK2;
+            DQK = sqrt(DQK2);
+
+            Y = (Q' * K) ./ DQK;
+
+            SM = softmax(Y', 'DataFormat', 'CB');          
+            Z = ZT' * SM;
+
+            %fprintf('state c=%d n=%d\n', c, n);
         end
 
         %function [Z,state,memory] = forward(layer,X)
@@ -124,6 +149,8 @@ classdef GaussianRBFLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optiona
             % (Optional) Reset layer state.
 
             % Define reset state function here.
+        %    layer.M = zeros([2, 2]);
+        %    layer.MFill = 0;
         %end
 
         %function [dLdX,dLdW,dLdSin] = backward(layer,X,Z,dLdZ,dLdSout,memory)

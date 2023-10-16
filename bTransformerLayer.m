@@ -95,11 +95,11 @@ classdef bTransformerLayer < nnet.layer.Layer % & nnet.layer.Formattable (Option
 
             %%dk = max(K' * K, [], 'all');
             %%dq = max(Q' * Q, [], 'all');
-            dk = mean(K' * K, 'all');
-            dq = mean(Q' * Q, 'all');
+            %dk = mean(K' * K, 'all');
+            %dq = mean(Q' * Q, 'all');
 
-            Y = (Q * K') ./ (dk + dq);
-            %Y = (Q * K') ./ sqrt(n);
+            %Y = (Q * K') ./ (dk + dq);
+            Y = (Q * K') ./ sqrt(n);
 
             %Z = V * softmax(Y', 'DataFormat', 'CB');
             SM = softmax(Y, 'DataFormat', 'CB');

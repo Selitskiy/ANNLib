@@ -12,10 +12,12 @@ classdef TanhLayers2Cl
 
             layers = [
                 featureInputLayer(net.m_in)
-                fullyConnectedLayer(net.k_hid1)
+                %fullyConnectedLayer(net.k_hid1)
+                
                 tanhLayer
                 fullyConnectedLayer(net.k_hid2)
                 tanhLayer
+
                 fullyConnectedLayer(net.n_out)
                 softmaxLayer
                 classificationLayer

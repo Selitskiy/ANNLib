@@ -1,10 +1,10 @@
-classdef ReluLayers2Cl
+classdef LrlreluLayers2D
     properties
     end
 
     methods
 
-        function net = ReluLayers2Cl()
+        function net = LrlreluLayers2D()
         end
 
 
@@ -13,18 +13,18 @@ classdef ReluLayers2Cl
             layers = [
                 featureInputLayer(net.m_in)
                 fullyConnectedLayer(net.k_hid1,'Name','inputFeatureExt')
-                %LrMultiplyLayer('inputFeatureExt', net.m_in, net.n_out)
+                LrLReLULayer("LrLReLU1", net.k_hid1, 1, 0.1)
 
-                reluLayer
-                %fullyConnectedLayer(net.k_hid1)               
+                %LrMultiplyLayer('inputFeatureExt', net.m_in, net.n_out)
+                %leakyReluLayer(0.1)
+                %LrLReLULayer("LrLReLU1", net.k_hid1, 1, 0.1)
+
                 fullyConnectedLayer(net.k_hid2)
-                reluLayer
+                LrLReLULayer('LrLReLU2', net.k_hid2, 1, 0.1)
                 %fullyConnectedLayer(net.k_hid2)
-                %reluLayer
-                
+
                 fullyConnectedLayer(net.n_out)
-                softmaxLayer
-                classificationLayer
+                regressionLayer
             ];
 
             net.lGraph = layerGraph(layers);

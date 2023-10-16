@@ -1,4 +1,4 @@
-classdef GaussianRBFLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
+classdef MultiplyLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
 
     properties
         % (Optional) Layer properties.
@@ -7,15 +7,17 @@ classdef GaussianRBFLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optiona
 
         % Number input channels
         numInChannels
-        %numOutChannels
+        numMultiply
+        numOutChannels
+
+        % Static Weights
+        W
     end
 
     properties (Learnable)
         % (Optional) Layer learnable parameters.
 
         % Declare learnable parameters here.
-        C
-        B
         
         % Weights
         %W
@@ -37,7 +39,7 @@ classdef GaussianRBFLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optiona
     %end
 
     methods
-        function layer = GaussianRBFLayer(name, numInChannels) %, numOutChannels)
+        function layer = MultiplyLayer(name, numInChannels, numMultiply) %, numOutChannels)
             % (Optional) Create a myLayer.
             % This function must have the same name as the class.
 
@@ -47,22 +49,24 @@ classdef GaussianRBFLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optiona
             layer.Name = name;
 
             % Set layer description.
-            layer.Description = "Gaussian with " + numInChannels + " channels";
+            layer.Description = "Multiply layer";
 
             layer.numInChannels = numInChannels;
-            %layer.numOutChannels = numOutChannels;
+            layer.numMultiply = numMultiply;
+            layer.numOutChannels = numInChannels * numMultiply;
 
-            % Initialize scaling coefficient.
-            bound = 1; %0.5; %sqrt(6 / layer.numInChannels);
-            layer.C = bound * rand([numInChannels 1]);% + 0.25; 
-            layer.B = bound * rand([numInChannels 1]);% + 0.25; 
 
             % Initialize weight coefficients.
-            %%layer.W = rand([layer.numOutChannels, layer.numInChannels]);
+            W1 = eye(layer.numInChannels);
+            layer.W = W1;
+            for i = 1:numMultiply-1
+                layer.W = vertcat(layer.W, W1);
+            end
+
             %bound = sqrt(6 / (layer.numOutChannels + layer.numInChannels));
             %layer.W = bound * (2. * rand([layer.numOutChannels, layer.numInChannels],'single') - 1.);
 
-            %%layer.W0 = rand([layer.numOutChannels, 1]);
+            %layer.W0 = rand([layer.numOutChannels, 1]);
             %layer.W0 = zeros([layer.numOutChannels, 1]);
 
         end
@@ -90,8 +94,7 @@ classdef GaussianRBFLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optiona
 
             [c, n] = size(X);
 
-            Z = exp(-(layer.B .* (X - layer.C)) .^ 2);
-            %Z = layer.W * exp((-layer.B) .* ((X - layer.C) .^ 2)) + layer.W0;
+            Z = layer.W * X;
 
         end
 

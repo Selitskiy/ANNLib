@@ -12,10 +12,15 @@ classdef ReluLayers2D
 
             layers = [
                 featureInputLayer(net.m_in)
-                fullyConnectedLayer(net.k_hid1)
+                fullyConnectedLayer(net.k_hid1,'Name','inputFeatureExt')
+
                 reluLayer
+                %fullyConnectedLayer(net.k_hid1)
                 fullyConnectedLayer(net.k_hid2)
+
                 reluLayer
+                %fullyConnectedLayer(net.k_hid2)
+
                 fullyConnectedLayer(net.n_out)
                 regressionLayer
             ];

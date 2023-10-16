@@ -1,16 +1,16 @@
-classdef RbfNet2D < RbfLayers2D & BaseNet2D & MLPInputNet2D
+classdef Dp2BTransReLUNet2D < Dp2BTransReLULayers2D & BaseNet2D & MLPInputNet2D
 
     properties
-
     end
 
     methods
-        function net = RbfNet2D(x_off, x_in, t_in, y_off, y_out, t_out, ini_rate, max_epoch)
+        function net = Dp2BTransReLUNet2D(x_off, x_in, t_in, y_off, y_out, t_out, ini_rate, max_epoch)
 
             net = net@BaseNet2D(x_off, x_in, t_in, y_off, y_out, t_out, ini_rate, max_epoch);
             net = net@MLPInputNet2D();
+            net = net@Dp2BTransReLULayers2D();
 
-            net.name = "rbf2d";
+            net.name = "dp2btransrelu2d";
 
         end
 
@@ -20,7 +20,7 @@ classdef RbfNet2D < RbfLayers2D & BaseNet2D & MLPInputNet2D
             [net, X, Y, Bi, Bo, XI, C, Sx, Sy, k_ob] = TrainTensors@MLPInputNet2D(net, M, l_sess, n_sess, norm_fli, norm_flo);
 
             net = Create(net);
-
+                 
         end
 
 

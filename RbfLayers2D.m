@@ -12,8 +12,13 @@ classdef RbfLayers2D
 
             layers = [
                 featureInputLayer(net.m_in)
-                GaussianRBFLayer('RBF1', net.m_in, net.k_hid1)
-                GaussianRBFLayer('RBF2', net.k_hid1, net.k_hid2)
+                fullyConnectedLayer(net.k_hid1,'Name','inputFeatureExt')
+
+                GaussianRBFLayer('RBF1', net.k_hid1) %, net.k_hid1)
+
+                fullyConnectedLayer(net.k_hid2)
+                GaussianRBFLayer('RBF2', net.k_hid2) %, net.k_hid2)
+                
                 fullyConnectedLayer(net.n_out)
                 regressionLayer
             ];

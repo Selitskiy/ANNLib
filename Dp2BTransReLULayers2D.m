@@ -1,10 +1,10 @@
-classdef ReluLayers2Cl
+classdef Dp2BTransReLULayers2D
     properties
     end
 
     methods
 
-        function net = ReluLayers2Cl()
+        function net = Dp2BTransReLULayers2D()
         end
 
 
@@ -13,18 +13,26 @@ classdef ReluLayers2Cl
             layers = [
                 featureInputLayer(net.m_in)
                 fullyConnectedLayer(net.k_hid1,'Name','inputFeatureExt')
-                %LrMultiplyLayer('inputFeatureExt', net.m_in, net.n_out)
+
+                %%dpTransformerLayer(net.k_hid1, "k_hid1")
+                %dpBatchTransformerLayer(net.k_hid1, "b_k_hid1")
+                %%dpTransformerLayer(net.k_hid1, "k_hid1")
+                dp2BatchTransformerLayer(net.k_hid1, "b_k_hid1")
+
+                fullyConnectedLayer(net.n_out,'Name','FeatureBottle') 
 
                 reluLayer
-                %fullyConnectedLayer(net.k_hid1)               
-                fullyConnectedLayer(net.k_hid2)
+                %tanhLayer
+                fullyConnectedLayer(2*net.n_out+1)
                 reluLayer
-                %fullyConnectedLayer(net.k_hid2)
-                %reluLayer
-                
+                %tanhLayer
+                %fullyConnectedLayer(2*net.n_out+1)
+
+                %GaussianRBFLayer('RBF1', net.n_out, net.n_out)
+                %GaussianRBFLayer('RBF2', net.n_out, 2*net.n_out+1)
+
                 fullyConnectedLayer(net.n_out)
-                softmaxLayer
-                classificationLayer
+                regressionLayer
             ];
 
             net.lGraph = layerGraph(layers);
@@ -37,6 +45,8 @@ classdef ReluLayers2Cl
                 'MaxEpochs',net.max_epoch);
 
                  %'Plots', 'training-progress',...
+
+
         end
 
         

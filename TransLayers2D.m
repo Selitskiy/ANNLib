@@ -12,10 +12,18 @@ classdef TransLayers2D
 
             layers = [
                 featureInputLayer(net.m_in)
-                fullyConnectedLayer(net.k_hid1)
+                fullyConnectedLayer(net.k_hid1,'Name','inputFeatureExt')
+
                 transformerLayer(net.k_hid1, "k_hid1")
-                fullyConnectedLayer(net.k_hid2)
+                layerNormalizationLayer('Name','fcNorm')
+                fullyConnectedLayer(net.k_hid1)
+
+                fullyConnectedLayer(net.k_hid2,'Name','FeatureExt2')
+                
                 transformerLayer(net.k_hid2, "k_hid2")
+                layerNormalizationLayer('Name','fcNorm2')
+                fullyConnectedLayer(net.k_hid2)
+                
                 fullyConnectedLayer(net.n_out)
                 regressionLayer
             ];

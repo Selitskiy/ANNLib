@@ -1,34 +1,43 @@
-classdef MLPInputNet2D
+classdef Dp2BTransAENet2D < Dp2BTransAELayers2D & BaseNet2D & MLPInputNet2D
 
     properties
-        mb_size = [];
     end
 
     methods
+        function net = Dp2BTransAENet2D(x_off, x_in, t_in, y_off, y_out, t_out, ini_rate, max_epoch)
 
-        function net = MLPInputNet2D()
+            net = net@BaseNet2D(x_off, x_in, t_in, y_off, y_out, t_out, ini_rate, max_epoch);
+            net = net@MLPInputNet2D();
+            net = net@Dp2BTransAELayers2D();
+
+            net.name = "dp2btransae2d";
 
         end
 
 
         function [net, X, Y, Bi, Bo, XI, C, Sx, Sy, k_ob] = TrainTensors(net, M, l_sess, n_sess, norm_fli, norm_flo)
-            [X, Xc, Xr, Xs, Ys, Y, Bi, Bo, XI, C, Sx, Sy, k_ob] = generic_train_tensors2D(M, net.x_off, net.x_in, net.t_in, net.y_off, net.y_out, net.t_out, l_sess, n_sess, norm_fli, norm_flo, net.x_in);
-            net.mb_size = 2^floor(log2(k_ob)-4);
-            if net.mb_size < 32
-                net.mb_size = floor(k_ob/4);
-            end
-        end
 
+            %[net, X, Y, Bi, Bo, XI, C, Sx, Sy, k_ob] = TrainTensors@MLPInputNet2D(net, M, l_sess, n_sess, norm_fli, norm_flo);
+            [X, Xc, Xr, Xs, Ys, Y, Bi, Bo, XI, C, Sx, Sy, k_ob] = generic_train_ae_tensors2D(M, net.x_off, net.x_in, net.t_in, net.y_off, net.y_out, net.t_out, l_sess, n_sess, norm_fli, norm_flo, net.x_in);
+            net.mb_size = 2^floor(log2(k_ob*net.t_in)-4);
+            if net.mb_size < 32
+                net.mb_size = floor((k_ob*net.t_in)/4);
+            end
+
+            net = Create(net);
+                 
+        end
 
         function [X2, Y2, Yh2, Yhs2, Bti, Bto, XI2, Sx2, Sy2, k_tob] = TestTensors(net, M, l_sess, l_test, t_sess, sess_off, offset, norm_fli, norm_flo, Bi, Bo, k_tob)
-            [X2, Xc2, Xr2, Xs2, Ys2, Ysh2, Yshs2, Y2, Yh2, Yhs2, Bti, Bto, XI2, Sx2, Sy2, k_tob] = generic_test_tensors2D(M, net.x_off, net.x_in, net.t_in, net.y_off, net.y_out, net.t_out, l_sess, l_test, t_sess, sess_off, offset, norm_fli, norm_flo, Bi, Bo, k_tob, net.x_in, []);
+            [X2, Xc2, Xr2, Xs2, Ys2, Ysh2, Yshs2, Y2, Yh2, Yhs2, Bti, Bto, XI2, Sx2, Sy2, k_tob] = generic_test_ae_tensors2D(M, net.x_off, net.x_in, net.t_in, net.y_off, net.y_out, net.t_out, l_sess, l_test, t_sess, sess_off, offset, norm_fli, norm_flo, Bi, Bo, k_tob, net.x_in, []);
         end
+
 
 
         function net = Train(net, i, X, Y)
-            tNet = trainNetwork(X(:, :, i)', Y(:, :, i)', net.lGraph, net.options);
-            net.trainedNet = tNet;
-            net.lGraph = tNet.layerGraph;            
+            fprintf('Training %s Reg net %d\n', net.name, i); 
+
+            net = Train@MLPInputNet2D(net, i, X, Y);
         end
 
 
@@ -52,8 +61,10 @@ classdef MLPInputNet2D
                         regNet = resetState(regNets{prClNum}.trainedNet);
                     end
 
-                    predictedScores = predict(regNet, X2(:, j, i)');
-                    Y2(:, j, i) = predictedScores';
+                    for k = 0:net.t_in
+                        predictedScores = predict(regNet, X2(:, j + k*k_tob, i)');
+                        Y2(:, j + k*k_tob, i) = predictedScores';
+                    end
                 end
 
                 % GPU off
@@ -62,7 +73,7 @@ classdef MLPInputNet2D
 
             end
         end
+
         
     end
-
 end
