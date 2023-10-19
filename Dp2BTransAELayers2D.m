@@ -11,7 +11,7 @@ classdef Dp2BTransAELayers2D
         function net = Create(net)
 
             layers = [
-                featureInputLayer(net.m_in+1)
+                featureInputLayer(net.m_in+2) %+2)
                 fullyConnectedLayer(net.k_hid1,'Name','inputFeatureExt')
 
                 %%dpTransformerLayer(net.k_hid1, "k_hid1")

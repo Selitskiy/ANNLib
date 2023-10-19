@@ -1,9 +1,15 @@
 function [X2, Xc2, Xr2, Xs2, Ys2, Ysh2, Yshs2, Y2, Yh2, Yhs2, Bti, Bto, XI2, Sx2, Sy2, k_tob, Xp2, Xcp2, Xrp2, Xsp2] = generic_test_ae_tensors2D(M, x_off, x_in, t_in, y_off, y_out, t_out, l_sess, l_test, t_sess, sess_off, offset, norm_fli, norm_flo, Bi, Bo, k_tob, x_pca, Vit)
+    %t_inp - training overflow to give stability
+    t_inp = floor(t_in * 1.2);
+
     %% Test regression ANN
     if(k_tob == 0)
         [m,~] = size(M);
-        k_tob = floor(l_sess/t_out); %ceil
-        if(l_sess + k_tob*t_out*(t_sess-sess_off)) > m
+        %k_tob = floor(l_sess/t_out); 
+        k_tob = floor((m - (t_sess+sess_off)*l_sess - offset - t_in) / t_out);
+
+        %if(l_sess + k_tob*t_out*(t_sess-sess_off)) > m
+        if ((t_sess+sess_off)*l_sess + (k_tob-1)*t_out + offset + t_in + t_out) > m
             k_tob = k_tob - 1;
         end
     end
@@ -17,7 +23,7 @@ function [X2, Xc2, Xr2, Xs2, Ys2, Ysh2, Yshs2, Y2, Yh2, Yhs2, Bti, Bto, XI2, Sx2
         m_pca = x_pca * t_in;
     end
 
-    X2 = zeros([m_in, k_tob*t_in, t_sess-sess_off]);
+    X2 = zeros([m_in+2, k_tob*t_in, t_sess-sess_off]);
 
     Xc2 = zeros([x_in, t_out, 1, k_tob, t_sess-sess_off]);
     Xr2 = ones([m_in+1, k_tob, t_sess-sess_off]);
@@ -36,7 +42,7 @@ function [X2, Xc2, Xr2, Xs2, Ys2, Ysh2, Yshs2, Y2, Yh2, Yhs2, Bti, Bto, XI2, Sx2
 
     %Segment boundaries
     Sx2 = zeros([2, k_tob, t_sess-sess_off]);
-    Sy2 = zeros([2, k_tob, t_sess-sess_off]);
+    Sy2 = zeros([2, k_tob*t_in, t_sess-sess_off]);
 
 
     %PCA
@@ -76,7 +82,7 @@ function [X2, Xc2, Xr2, Xs2, Ys2, Ysh2, Yshs2, Y2, Yh2, Yhs2, Bti, Bto, XI2, Sx2
             Mx = reshape( Mw', [m_in,1] );
             X2(1:m_in, j + k*k_tob, i) = Mx(:);
             X2(m_in+1, j + k*k_tob, i) = k+1;
-
+            X2(m_in+2, j + k*k_tob, i) = log(k+1);
 
             Xr2(1:m_in, j, i) = Mx(:);
             %Xc2(:, :, 1, j, i) = Mw';
@@ -85,8 +91,12 @@ function [X2, Xc2, Xr2, Xs2, Ys2, Ysh2, Yshs2, Y2, Yh2, Yhs2, Bti, Bto, XI2, Sx2
 
             st_idx = idx+t_in+k;
             end_idx = idx+t_in+k+t_out-1;
-            Sy2(1,j,i) = st_idx;
-            Sy2(2,j,i) = end_idx;
+            Sy2(1,j + k*k_tob,i) = st_idx;
+            Sy2(2,j + k*k_tob,i) = end_idx;
+
+            %if m < end_idx
+            %    end_idx = m;
+            %end
 
             Myw = M(st_idx:end_idx, y_off+1:y_off+y_out);
             My = reshape( Myw', [n_out,1] );
@@ -123,6 +133,7 @@ function [X2, Xc2, Xr2, Xs2, Ys2, Ysh2, Yshs2, Y2, Yh2, Yhs2, Bti, Bto, XI2, Sx2
                 Mx = reshape( Mw', [m_in,1] );
                 X2(1:m_in, j + k*k_tob, i) = Mx(:);
                 X2(m_in+1, j + k*k_tob, i) = (k+1)/t_in;
+                X2(m_in+2, j + k*k_tob, i) = log(k+1)/log(t_in);
 
                 Xr2(1:m_in, j, i) = Mx(:);
                 %Xc2(:, :, 1, j, i) = Mw';

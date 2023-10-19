@@ -1,7 +1,9 @@
-function [X, Xc, Xr, Xs, Ys, Y, Bi, Bo, XI, C, Sx, Sy, k_ob, Vit, Xp, Xcp, Xrp, Xsp, PcaSc] = generic_train_ae_tensors2D(M, x_off, x_in, t_in, y_off, y_out, t_out, l_sess, n_sess, norm_fli, norm_flo, x_pca)
+function [X, Xc, Xr, Xs, Ys, Y, Bi, Bo, XI, C, Sx, Sy, k_ob, t_inp, Vit, Xp, Xcp, Xrp, Xsp, PcaSc] = generic_train_ae_tensors2D(M, x_off, x_in, t_in, y_off, y_out, t_out, l_sess, n_sess, norm_fli, norm_flo, x_pca)
+    %t_inp - training overflow to give stability
+    t_inp = floor(t_in * 1.2);
 
     % Number of observations in a session
-    k_ob = l_sess - t_in + 1 - t_in - t_out;
+    k_ob = l_sess - t_in - t_inp + 1 - t_in - t_out;
 
     m_in = x_in * t_in;
     n_out = y_out * t_out;
@@ -10,7 +12,7 @@ function [X, Xc, Xr, Xs, Ys, Y, Bi, Bo, XI, C, Sx, Sy, k_ob, Vit, Xp, Xcp, Xrp, 
 
     % Re-format input into session tensor
     % ('ones' (not 'zeros') for X are for bias 'trick'
-    X = zeros([m_in+1, k_ob*t_in, n_sess]);
+    X = zeros([m_in+2, k_ob*t_inp, n_sess]);
 
     Xc = zeros([x_in, t_in, 1, k_ob, n_sess]);
     Xr = ones([m_in+1, k_ob, n_sess]);
@@ -19,7 +21,7 @@ function [X, Xc, Xr, Xs, Ys, Y, Bi, Bo, XI, C, Sx, Sy, k_ob, Vit, Xp, Xcp, Xrp, 
     %Ys = zeros([n_in, k_ob, n_sess]);
 
     %Y = zeros([n_out+1, k_ob*t_in, n_sess]);
-    Y = zeros([n_out, k_ob*t_in, n_sess]);
+    Y = zeros([n_out, k_ob*t_inp, n_sess]);
 
     Bi = zeros([4, x_in, n_sess]);
     Bo = zeros([4, y_out, n_sess]);
@@ -50,7 +52,7 @@ function [X, Xc, Xr, Xs, Ys, Y, Bi, Bo, XI, C, Sx, Sy, k_ob, Vit, Xp, Xcp, Xrp, 
 
     for i = 1:n_sess
         for j = 1:k_ob
-            for k = 0:t_in
+            for k = 0:t_inp
             % extract and scale observation sequence
             idx = (i-1)*l_sess + j;
 
@@ -64,6 +66,7 @@ function [X, Xc, Xr, Xs, Ys, Y, Bi, Bo, XI, C, Sx, Sy, k_ob, Vit, Xp, Xcp, Xrp, 
             Mx = reshape( Mxw', [m_in,1] );
             X(1:m_in, j + k*k_ob, i) = Mx(:);
             X(m_in+1, j + k*k_ob, i) = k+1;
+            X(m_in+2, j + k*k_ob, i) = log(k+1);
 
             Xr(1:m_in, j, i) = Mx(:);
             Xc(:, :, 1, j, i) = Mxw';
@@ -79,7 +82,7 @@ function [X, Xc, Xr, Xs, Ys, Y, Bi, Bo, XI, C, Sx, Sy, k_ob, Vit, Xp, Xcp, Xrp, 
 
             My = reshape( Myw', [n_out,1] );
             Y(1:n_out, j + k*k_ob, i) = My(:);
-            %Y(n_out+1, j + k*k_ob, i) = k;
+            %%Y(n_out+1, j + k*k_ob, i) = k;
 
             Ys(:,:, j, i) = Myw';
 
@@ -123,7 +126,7 @@ function [X, Xc, Xr, Xs, Ys, Y, Bi, Bo, XI, C, Sx, Sy, k_ob, Vit, Xp, Xcp, Xrp, 
 
         if(norm_fli)
             for j = 1:k_ob
-                for k = 0:t_in
+                for k = 0:t_inp
                 % extract and scale observation sequence
                 idx = (i-1)*l_sess + j;
             
@@ -137,6 +140,7 @@ function [X, Xc, Xr, Xs, Ys, Y, Bi, Bo, XI, C, Sx, Sy, k_ob, Vit, Xp, Xcp, Xrp, 
                 Mx = reshape( Mxw', [m_in,1] );
                 X(1:m_in, j + k*k_ob, i) = Mx(:);
                 X(m_in+1, j + k*k_ob, i) = (k+1)/t_in;
+                X(m_in+2, j + k*k_ob, i) = log(k+1)/log(t_in);
 
                 Xr(1:m_in, j, i) = Mx(:);
                 Xc(:, :, 1, j, i) = Mxw';
@@ -178,7 +182,7 @@ function [X, Xc, Xr, Xs, Ys, Y, Bi, Bo, XI, C, Sx, Sy, k_ob, Vit, Xp, Xcp, Xrp, 
 
         if(norm_flo)
             for j = 1:k_ob
-                for k = 0:t_in
+                for k = 0:t_inp
                 % extract and scale observation sequence
                 idx = (i-1)*l_sess + j;
                 
@@ -194,7 +198,7 @@ function [X, Xc, Xr, Xs, Ys, Y, Bi, Bo, XI, C, Sx, Sy, k_ob, Vit, Xp, Xcp, Xrp, 
 
                 My = reshape( Myw', [n_out,1] );
                 Y(1:n_out, j + k*k_ob, i) = My(:);
-                %Y(n_out+1, j + k*k_ob, i) = (k+1)/t_in;
+                %%Y(n_out+1, j + k*k_ob, i) = (k+1)/t_in;
 
                 Ys(:,:, j, i) = Myw';
 
