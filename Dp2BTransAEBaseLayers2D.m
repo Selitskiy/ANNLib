@@ -16,9 +16,9 @@ classdef Dp2BTransAEBaseLayers2D
                 fullyConnectedLayer(net.k_hid1,'Name','inputFeatureExt')
 
 
-                dpBatchTransformerLayer(net.k_hid1, "b_k_hid1")
+                %dpBatchTransformerLayer(net.k_hid1, "b_k_hid1")
                 %%dpTransformerLayer(net.k_hid1, "b_k_hid1")
-                %%dp2BatchTransformerLayer(net.k_hid1, "b_k_hid1")
+                dp2BatchTransformerLayer(net.k_hid1, "b_k_hid1")
 
                 %reluLayer
                 %%LrReLULayer('LrReLU0', net.k_hid1, 1)
