@@ -101,11 +101,11 @@ classdef dpBatchTransformerLayer < nnet.layer.Layer % & nnet.layer.Formattable (
 
             Y = (Q * K') ./ DQK;
 
-            %ZT = X' * Y;
-            %Z = ZT';
 
             SM = softmax(Y, 'DataFormat', 'CB');
             ZT = X' * SM;
+            %ZT = V' * SM;
+
             Z = ZT';
 
             %fprintf('state c=%d n=%d\n', c, n);
