@@ -3,6 +3,7 @@ classdef vis3x3BTransAEBaseNet2D < vis3x3BTransAEBaseLayers2D & BaseNet2D & MLPI
     properties
         k_bottle
         k_bottle2
+        k_inject
     end
 
     methods
@@ -12,6 +13,7 @@ classdef vis3x3BTransAEBaseNet2D < vis3x3BTransAEBaseLayers2D & BaseNet2D & MLPI
             net = net@MLPInputNet2D();
             net = net@vis3x3BTransAEBaseLayers2D();
 
+            net.k_inject = 10;
             net.k_bottle = 27*9;
             net.k_bottle2 = 27;
             net.k_hid1 = 27*27; %9*3 * 9*3
