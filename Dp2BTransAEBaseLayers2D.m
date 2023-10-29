@@ -18,6 +18,7 @@ classdef Dp2BTransAEBaseLayers2D
 
 
                 dpBatchTransformerLayer(net.k_hid1, "b_k_hid1")
+                %euBatchTransformerLayer(net.k_hid1, "b_k_hid1")
                 %%vTransformerLayer(net.k_hid1, "b_k_hid1")
                 %%dpTransformerLayer(net.k_hid1, "b_k_hid1")
                 %%dp2BatchTransformerLayer(net.k_hid1, "b_k_hid1")
@@ -43,7 +44,7 @@ classdef Dp2BTransAEBaseLayers2D
                 fullyConnectedLayer(2*net.n_out*net.k_bottle+1)
 
 
-                %?reluLayer
+                %reluLayer
                 %%tanhLayer
                 %%GaussianRBFLayer('RBF2', 2*net.n_out*net.k_bottle+1)
                 

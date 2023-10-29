@@ -1,21 +1,23 @@
-classdef Dp2BTransAEBaseNet2D < Dp2BTransAEBaseLayers2D & BaseNet2D & MLPInputNet2D
+classdef vis3x3BTransAEBaseNet2D < vis3x3BTransAEBaseLayers2D & BaseNet2D & MLPInputNet2D
 
     properties
         k_bottle
+        k_bottle2
     end
 
     methods
-        function net = Dp2BTransAEBaseNet2D(x_off, x_in, t_in, y_off, y_out, t_out, ini_rate, max_epoch, bottle_coeff)
+        function net = vis3x3BTransAEBaseNet2D(x_off, x_in, t_in, y_off, y_out, t_out, ini_rate, max_epoch, bottle_coeff)
 
             net = net@BaseNet2D(x_off, x_in, t_in, y_off, y_out, t_out, ini_rate, max_epoch);
             net = net@MLPInputNet2D();
-            net = net@Dp2BTransAEBaseLayers2D();
+            net = net@vis3x3BTransAEBaseLayers2D();
 
-            net.k_bottle = floor(net.m_in * bottle_coeff);
-            net.k_hid1 = floor(net.k_hid1 * bottle_coeff);
-            net.k_hid2 = floor(net.k_hid2 * bottle_coeff);
+            net.k_bottle = 27*9;
+            net.k_bottle2 = 27;
+            net.k_hid1 = 27*27; %9*3 * 9*3
+            net.k_hid2 = floor(2*net.n_out*net.k_bottle + 1);
 
-            net.name = "dp2bTransAeBase2d";
+            net.name = "vis3x3bTransAeBase2d";
 
         end
 
