@@ -1,4 +1,4 @@
-classdef vis3x3BTransAEBaseNet2D < vis3x3BTransAEBaseLayers2D & BaseNet2D & MLPInputNet2D
+classdef residualVis3x3BTransAEBaseNet2D < residualVis3x3BTransAEBaseLayers2D & BaseNet2D & MLPInputNet2D
 
     properties
         k_bottle
@@ -9,12 +9,12 @@ classdef vis3x3BTransAEBaseNet2D < vis3x3BTransAEBaseLayers2D & BaseNet2D & MLPI
     end
 
     methods
-        function net = vis3x3BTransAEBaseNet2D(x_off, x_in, t_in, y_off, y_out, t_out, ini_rate, max_epoch,...
+        function net = residualVis3x3BTransAEBaseNet2D(x_off, x_in, t_in, y_off, y_out, t_out, ini_rate, max_epoch,...
                 bottle_coeff, bottle_coeff2, l_patchV, l_patchH, k_inject)
 
             net = net@BaseNet2D(x_off, x_in, t_in, y_off, y_out, t_out, ini_rate, max_epoch);
             net = net@MLPInputNet2D();
-            net = net@vis3x3BTransAEBaseLayers2D();
+            net = net@residualVis3x3BTransAEBaseLayers2D();
 
             net.k_patchV = 3;
             net.k_patchH = 3;

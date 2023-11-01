@@ -94,7 +94,7 @@ classdef residualVis3x3BatchTransformerLayer < nnet.layer.Layer % & nnet.layer.F
     %end
 
     methods
-        function layer = residualVis3x3BatchTransformerLayer(numInChannels, numInChannels9, numResChannels, name)
+        function layer = residualVis3x3BatchTransformerLayer(numInChannels, numPatchV, numPatchH, numResChannels, name)
             % (Optional) Create a myLayer.
             % This function must have the same name as the class.
 
@@ -104,9 +104,9 @@ classdef residualVis3x3BatchTransformerLayer < nnet.layer.Layer % & nnet.layer.F
             layer.Name = name;
 
             % Set layer description.
-            layer.Description = "Visual 3x3 Transformer" + numInChannels9 + " channels";
+            layer.Description = "Visual 3x3 Transformer" + numPatchV*numPatchH + " channels";
 
-            layer.numPatch = numInChannels9 * numInChannels9;
+            layer.numPatch = numPatchV * numPatchH;
             layer.numInChannels = numInChannels; %9 * layer.numPatch;
             %layer.numOutChannels = layer.numInChannels;
             layer.numResChannels = numResChannels;

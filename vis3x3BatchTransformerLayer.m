@@ -7,7 +7,7 @@ classdef vis3x3BatchTransformerLayer < nnet.layer.Layer % & nnet.layer.Formattab
 
         % Number input channels
         numInChannels
-        numOutChannels
+        %numOutChannels
 
         numPatch
     end
@@ -87,7 +87,7 @@ classdef vis3x3BatchTransformerLayer < nnet.layer.Layer % & nnet.layer.Formattab
     %end
 
     methods
-        function layer = vis3x3BatchTransformerLayer(numInChannels9, name)
+        function layer = vis3x3BatchTransformerLayer(numPatchV, numPatchH, name)
             % (Optional) Create a myLayer.
             % This function must have the same name as the class.
 
@@ -97,12 +97,13 @@ classdef vis3x3BatchTransformerLayer < nnet.layer.Layer % & nnet.layer.Formattab
             layer.Name = name;
 
             % Set layer description.
-            layer.Description = "Visual 3x3 Transformer" + numInChannels9 + " channels";
+            layer.Description = "Visual 3x3 Transformer" + numPatchV*numPatchH + " channels";
 
-            layer.numPatch = numInChannels9 * numInChannels9;
+
+            layer.numPatch = numPatchV * numPatchH;
             layer.numInChannels = 9 * layer.numPatch;
-            layer.numOutChannels = layer.numInChannels;
 
+            
             % Initialize weight coefficients.
             bound = sqrt(6 / (layer.numPatch + layer.numPatch));
             
