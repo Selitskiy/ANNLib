@@ -2,6 +2,7 @@ classdef visBTransAEBaseNet2D < visBTransAEBaseLayers2D & BaseNet2D & MLPInputNe
 
     properties
         k_bottle
+        k_bottle2
     end
 
     methods
@@ -12,8 +13,9 @@ classdef visBTransAEBaseNet2D < visBTransAEBaseLayers2D & BaseNet2D & MLPInputNe
             net = net@visBTransAEBaseLayers2D();
 
             net.k_bottle = floor(net.m_in * bottle_coeff);
+            net.k_bottle2 = floor(net.m_in * bottle_coeff * bottle_coeff);
 
-            net.k_hid1 = net.m_in;
+            net.k_hid1 = net.n_out*net.k_bottle; %net.m_in;
             net.k_hid2 = floor(2*net.n_out*net.k_bottle + 1);
 
             net.name = "visBTransAeBase2d";

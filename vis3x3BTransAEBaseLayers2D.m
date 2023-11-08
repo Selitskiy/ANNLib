@@ -31,10 +31,10 @@ classdef vis3x3BTransAEBaseLayers2D
                 LrReLULayer('LrReLU1', net.k_bottle2, 1)
                 %LrReLULayer('LrReLU1', net.k_bottle2+net.k_inject, 1)
 
-                fullyConnectedLayer(2*net.n_out*net.k_bottle2+1)
+                fullyConnectedLayer(net.k_hid2); %2*net.n_out*net.k_bottle2+1)
                 %residualFCLayer(net.k_bottle2+net.k_inject, 2*net.n_out*net.k_bottle2+1, net.k_inject, 'Feature2')
 
-                LrReLULayer('LrReLU2', 2*net.n_out*net.k_bottle2+1, 1)
+                LrReLULayer('LrReLU2', net.k_hid2, 1); %2*net.n_out*net.k_bottle2+1, 1)
                 %LrReLULayer('LrReLU2', 2*net.n_out*net.k_bottle2+1+net.k_inject, 1)
                 
 
