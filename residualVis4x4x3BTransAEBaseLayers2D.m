@@ -35,9 +35,9 @@ classdef residualVis4x4x3BTransAEBaseLayers2D
 
 
                 %residualFCLayer(net.k_bottle2 + net.k_inject, 2*net.n_out*net.k_bottle2+1, net.k_inject, 'FeatureExpansion2')
-                residualFCLayer(net.k_bottle2 + net.k_inject, 2*16*net.k_bottle2+1, net.k_inject, 'FeatureExpansion2')
+                residualFCLayer(net.k_bottle2 + net.k_inject, 2*198*net.k_bottle2+1, net.k_inject, 'FeatureExpansion2')
                 %LrReLULayer('LrReLU2', 2*net.n_out*net.k_bottle2+1 + net.k_inject, 1)
-                LrReLULayer('LrReLU2', 2*16*net.k_bottle2+1 + net.k_inject, 1)
+                LrReLULayer('LrReLU2', 2*198*net.k_bottle2+1 + net.k_inject, 1)
 
                 fullyConnectedLayer(net.n_out)
                 regressionLayer
