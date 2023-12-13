@@ -22,7 +22,7 @@ function [X2, Xc2, Xr2, Xs2, Ys2, Ysh2, Yshs2, Y2, Yh2, Yhs2, Bti, Bto, XI2, Sx2
         m_pca = x_pca * t_in;
     end
 
-    X2 = zeros([m_in, k_tob*t_in, t_sess-sess_off]);
+    X2 = zeros([m_in+2, k_tob*t_in, t_sess-sess_off]);
 
     Xc2 = zeros([x_in, t_out, 1, k_tob, t_sess-sess_off]);
     Xr2 = ones([m_in+1, k_tob, t_sess-sess_off]);
@@ -80,8 +80,8 @@ function [X2, Xc2, Xr2, Xs2, Ys2, Ysh2, Yshs2, Y2, Yh2, Yhs2, Bti, Bto, XI2, Sx2
 
             Mx = reshape( Mw', [m_in,1] );
             X2(1:m_in, j + k*k_tob, i) = Mx(:);
-            %X2(m_in+1, j + k*k_tob, i) = k+1;
-            %X2(m_in+2, j + k*k_tob, i) = log(k+1);
+            X2(m_in+1, j + k*k_tob, i) = k+1;
+            X2(m_in+2, j + k*k_tob, i) = log(k+1);
 
             Xr2(1:m_in, j, i) = Mx(:);
             %Xc2(:, :, 1, j, i) = Mw';
