@@ -1,6 +1,6 @@
-function [X2, Xc2, Xr2, Xs2, Ys2, Ysh2, Yshs2, Y2, Yh2, Yhs2, Bti, Bto, XI2, Sx2, Sy2, k_tob, Xp2, Xcp2, Xrp2, Xsp2] = generic_test_ae_base_tensors2D(M, x_off, x_in, t_in, y_off, y_out, t_out, l_sess, l_test, t_sess, sess_off, offset, norm_fli, norm_flo, Bi, Bo, k_tob, x_pca, Vit)
+function [X2, Xc2, Xr2, Xs2, Ys2, Ysh2, Yshs2, Y2, Yh2, Yhs2, Bti, Bto, XI2, Sx2, Sy2, k_tob, Xp2, Xcp2, Xrp2, Xsp2] = generic_test_ae_base_tensors2D(M, x_off, x_in, t_in, y_off, y_out, t_out, l_sess, l_test, t_sess, sess_off, offset, norm_fli, norm_flo, Bi, Bo, k_tob, x_pca, Vit, k_inj)
     %t_inp - training overflow to give stability
-    t_inp = floor(t_in * 1.2);
+    %t_inp = floor(t_in * 1.2);
 
     %% Test regression ANN
     if(k_tob == 0)
@@ -22,7 +22,7 @@ function [X2, Xc2, Xr2, Xs2, Ys2, Ysh2, Yshs2, Y2, Yh2, Yhs2, Bti, Bto, XI2, Sx2
         m_pca = x_pca * t_in;
     end
 
-    X2 = zeros([m_in+2, k_tob*t_in, t_sess-sess_off]);
+    X2 = zeros([m_in+k_inj, k_tob*t_in, t_sess-sess_off]);
 
     Xc2 = zeros([x_in, t_out, 1, k_tob, t_sess-sess_off]);
     Xr2 = ones([m_in+1, k_tob, t_sess-sess_off]);
@@ -58,7 +58,7 @@ function [X2, Xc2, Xr2, Xs2, Ys2, Ysh2, Yshs2, Y2, Yh2, Yhs2, Bti, Bto, XI2, Sx2
     % Re-format test input into session tensor
     for i = 1:t_sess-sess_off
         for j = 1:k_tob
-            for k = 0:t_in
+            for k = 1:t_in
             % extract and scale observation sequence
             idx = (i+sess_off)*l_sess + (j-1)*t_out + 1 + offset - t_in;
 
@@ -79,9 +79,9 @@ function [X2, Xc2, Xr2, Xs2, Ys2, Ysh2, Yshs2, Y2, Yh2, Yhs2, Bti, Bto, XI2, Sx2
             Bto(4,:,j,i) = std(Myw,0,1);
 
             Mx = reshape( Mw', [m_in,1] );
-            X2(1:m_in, j + k*k_tob, i) = Mx(:);
-            X2(m_in+1, j + k*k_tob, i) = k+1;
-            X2(m_in+2, j + k*k_tob, i) = log(k+1);
+            X2(1:m_in, (j-1)*t_in + k, i) = Mx(:);
+            X2(m_in+1, (j-1)*t_in + k, i) = k;
+            X2(m_in+2, (j-1)*t_in + k, i) = log(k+1);
 
             Xr2(1:m_in, j, i) = Mx(:);
             %Xc2(:, :, 1, j, i) = Mw';
@@ -90,8 +90,8 @@ function [X2, Xc2, Xr2, Xs2, Ys2, Ysh2, Yshs2, Y2, Yh2, Yhs2, Bti, Bto, XI2, Sx2
 
             st_idx = idx+t_in+k;
             end_idx = idx+t_in+k+t_out-1;
-            Sy2(1,j + k*k_tob,i) = st_idx;
-            Sy2(2,j + k*k_tob,i) = end_idx;
+            Sy2(1,(j-1)*t_in + k,i) = st_idx;
+            Sy2(2,(j-1)*t_in + k,i) = end_idx;
 
             %if m < end_idx
             %    end_idx = m;
@@ -99,12 +99,12 @@ function [X2, Xc2, Xr2, Xs2, Ys2, Ysh2, Yshs2, Y2, Yh2, Yhs2, Bti, Bto, XI2, Sx2
 
             Myw = M(st_idx:end_idx, y_off+1:y_off+y_out);
             My = reshape( Myw', [n_out,1] );
-            Yh2(:, j + k*k_tob, i) = My(:);
+            Yh2(:, (j-1)*t_in + k, i) = My(:);
 
             %[Bto(1,:,j,i), Bto(2,:,j,i)] = bounds(Myw,1);
 
             %My = reshape( Myw', [n_out,1] );
-            Yhs2(:, j + k*k_tob, i) = My(:);
+            Yhs2(:, (j-1)*t_in + k, i) = My(:);
 
             Ysh2(:,:, j, i) = Myw';
             Yshs2(:,:, j, i) = Myw';
@@ -118,7 +118,7 @@ function [X2, Xc2, Xr2, Xs2, Ys2, Ysh2, Yshs2, Y2, Yh2, Yhs2, Bti, Bto, XI2, Sx2
 
         if(norm_fli)
              for j = 1:k_tob
-                for k = 0:t_in
+                for k = 1:t_in
                 % extract and scale observation sequence
                 idx = (i+sess_off)*l_sess + (j-1)*t_out + 1 + offset - t_in;
 
@@ -130,9 +130,9 @@ function [X2, Xc2, Xr2, Xs2, Ys2, Ysh2, Yshs2, Y2, Yh2, Yhs2, Bti, Bto, XI2, Sx2
                 Mw = generic_mean_std_scale2D(Mw, MeanSessi, StdSessi);
             
                 Mx = reshape( Mw', [m_in,1] );
-                X2(1:m_in, j + k*k_tob, i) = Mx(:);
-                %X2(m_in+1, j + k*k_tob, i) = (k+1)/t_in;
-                %X2(m_in+2, j + k*k_tob, i) = log(k+1)/log(t_in);
+                X2(1:m_in, (j-1)*t_in + k, i) = Mx(:);
+                %X2(m_in+1, (j-1)*t_in + k, i) = (k)/t_in;
+                %X2(m_in+2, (j-1)*t_in + k, i) = log(k+1)/log(t_in);
 
                 Xr2(1:m_in, j, i) = Mx(:);
                 %Xc2(:, :, 1, j, i) = Mw';
@@ -176,7 +176,7 @@ function [X2, Xc2, Xr2, Xs2, Ys2, Ysh2, Yshs2, Y2, Yh2, Yhs2, Bti, Bto, XI2, Sx2
         
         if(norm_flo)
             for j = 1:k_tob
-                for k = 0:t_in
+                for k = 1:t_in
                 % extract and scale observation sequence
                 idx = (i+sess_off)*l_sess + (j-1)*t_out + 1 + offset - t_in;
 
@@ -191,7 +191,7 @@ function [X2, Xc2, Xr2, Xs2, Ys2, Ysh2, Yshs2, Y2, Yh2, Yhs2, Bti, Bto, XI2, Sx2
                 Myw = generic_mean_std_scale2D(Myw, MeanSesso, StdSesso);
 
                 My = reshape( Myw', [n_out,1] );
-                Yhs2(1:n_out, j + k*k_tob, i) = My(:);
+                Yhs2(1:n_out, (j-1)*t_in + k, i) = My(:);
 
 
                 Yshs2(:,:, j, i) = Myw';

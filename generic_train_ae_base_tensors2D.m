@@ -1,4 +1,4 @@
-function [X, Xc, Xr, Xs, Ys, Y, Bi, Bo, XI, C, Sx, Sy, k_ob, t_inp, Vit, Xp, Xcp, Xrp, Xsp, PcaSc] = generic_train_ae_base_tensors2D(M, x_off, x_in, t_in, y_off, y_out, t_out, l_sess, n_sess, norm_fli, norm_flo, x_pca)
+function [X, Xc, Xr, Xs, Ys, Y, Bi, Bo, XI, C, Sx, Sy, k_ob, t_inp, Vit, Xp, Xcp, Xrp, Xsp, PcaSc] = generic_train_ae_base_tensors2D(M, x_off, x_in, t_in, y_off, y_out, t_out, l_sess, n_sess, norm_fli, norm_flo, x_pca, k_inj)
     %t_inp - training overflow to give stability
     t_inp = floor(t_in * 1.2);
 
@@ -12,7 +12,7 @@ function [X, Xc, Xr, Xs, Ys, Y, Bi, Bo, XI, C, Sx, Sy, k_ob, t_inp, Vit, Xp, Xcp
 
     % Re-format input into session tensor
     % ('ones' (not 'zeros') for X are for bias 'trick'
-    X = zeros([m_in+2, k_ob*t_inp, n_sess]);
+    X = zeros([m_in+k_inj, k_ob*(t_inp+1), n_sess]);
 
     Xc = zeros([x_in, t_in, 1, k_ob, n_sess]);
     Xr = ones([m_in+1, k_ob, n_sess]);
@@ -21,7 +21,7 @@ function [X, Xc, Xr, Xs, Ys, Y, Bi, Bo, XI, C, Sx, Sy, k_ob, t_inp, Vit, Xp, Xcp
     %Ys = zeros([n_in, k_ob, n_sess]);
 
     %Y = zeros([n_out+1, k_ob*t_in, n_sess]);
-    Y = zeros([n_out, k_ob*t_inp, n_sess]);
+    Y = zeros([n_out, k_ob*(t_inp+1), n_sess]);
 
     Bi = zeros([4, x_in, n_sess]);
     Bo = zeros([4, y_out, n_sess]);
@@ -64,9 +64,12 @@ function [X, Xc, Xr, Xs, Ys, Y, Bi, Bo, XI, C, Sx, Sy, k_ob, t_inp, Vit, Xp, Xcp
             Mxw = M(st_idx:end_idx, x_off+1:x_off+x_in);
 
             Mx = reshape( Mxw', [m_in,1] );
-            X(1:m_in, j + k*k_ob, i) = Mx(:);
-            X(m_in+1, j + k*k_ob, i) = k+1;
-            X(m_in+2, j + k*k_ob, i) = log(k+1);
+            %X(1:m_in, j + k*k_ob, i) = Mx(:);
+            %X(m_in+1, j + k*k_ob, i) = k+1;
+            %X(m_in+2, j + k*k_ob, i) = log(k+1);
+            X(1:m_in, (j-1)*(t_inp+1) + k + 1, i) = Mx(:);
+            X(m_in+1, (j-1)*(t_inp+1) + k + 1, i) = k;
+            X(m_in+2, (j-1)*(t_inp+1) + k + 1, i) = log(k+1);
 
             Xr(1:m_in, j, i) = Mx(:);
             Xc(:, :, 1, j, i) = Mxw';
@@ -81,7 +84,7 @@ function [X, Xc, Xr, Xs, Ys, Y, Bi, Bo, XI, C, Sx, Sy, k_ob, t_inp, Vit, Xp, Xcp
             Myw = M(st_idx:end_idx, y_off+1:y_off+y_out);
 
             My = reshape( Myw', [n_out,1] );
-            Y(1:n_out, j + k*k_ob, i) = My(:);
+            Y(1:n_out, (j-1)*(t_inp+1) + k + 1, i) = My(:);
             %%Y(n_out+1, j + k*k_ob, i) = k;
 
             Ys(:,:, j, i) = Myw';
@@ -138,9 +141,9 @@ function [X, Xc, Xr, Xs, Ys, Y, Bi, Bo, XI, C, Sx, Sy, k_ob, t_inp, Vit, Xp, Xcp
                 Mxw = generic_mean_std_scale2D(Mxw, MeanSessi, StdSessi);
 
                 Mx = reshape( Mxw', [m_in,1] );
-                X(1:m_in, j + k*k_ob, i) = Mx(:);
-                %X(m_in+1, j + k*k_ob, i) = (k+1)/t_in;
-                %X(m_in+2, j + k*k_ob, i) = log(k+1)/log(t_in);
+                X(1:m_in, (j-1)*(t_inp+1) + k + 1, i) = Mx(:);
+                %X(m_in+1, (j-1)*(t_inp+1) + k + 1, i) = (k)/t_in;
+                %X(m_in+2, (j-1)*(t_inp+1) + k + 1, i) = log(k+1)/log(t_in);
 
                 Xr(1:m_in, j, i) = Mx(:);
                 Xc(:, :, 1, j, i) = Mxw';
@@ -197,8 +200,8 @@ function [X, Xc, Xr, Xs, Ys, Y, Bi, Bo, XI, C, Sx, Sy, k_ob, t_inp, Vit, Xp, Xcp
                 Myw = generic_mean_std_scale2D(Myw, MeanSesso, StdSesso);
 
                 My = reshape( Myw', [n_out,1] );
-                Y(1:n_out, j + k*k_ob, i) = My(:);
-                %%Y(n_out+1, j + k*k_ob, i) = (k+1)/t_in;
+                Y(1:n_out, (j-1)*(t_inp+1) + k + 1, i) = My(:);
+                %%Y(n_out+1, (j-1)*(t_inp+1) + k + 1, i) = (k+1)/t_in;
 
                 Ys(:,:, j, i) = Myw';
 
