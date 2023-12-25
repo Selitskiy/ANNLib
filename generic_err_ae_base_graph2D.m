@@ -1,4 +1,4 @@
-function generic_err_ae_base_graph2D(M, Em, Er, l_m, Y2, Sy2, l_y, l_sess, x_off, x_in, t_in, y_off, y_out, t_out, k_tob, t_sess, sess_off, offset, k_start, modelName, yLab)
+function generic_err_ae_base_graph2D(M, Em, Er, l_m, Y2, Sy2, l_y, l_sess, x_off, x_in, t_in, y_off, y_out, t_out, k_tob, t_sess, sess_off, offset, k_start, modelName, yLab, Ya2, Sa)
 
     
     legItems = strings(0);
@@ -40,8 +40,12 @@ function generic_err_ae_base_graph2D(M, Em, Er, l_m, Y2, Sy2, l_y, l_sess, x_off
             end
         end
 
+
+
         for k = 1:y_out
-            lp = plot(y_st2:y_end2, M3(y_st2:y_end2, y_off+k), 'LineStyle', '-', 'Color', 'r', 'MarkerSize', 1,'LineWidth', 1);
+            %lp = plot(y_st2:y_end2, M3(y_st2:y_end2, y_off+k), 'LineStyle', '-', 'Color', 'r', 'MarkerSize', 1,'LineWidth', 1);
+            lp = plot((i+sess_off)*l_sess+Sa(1,i):(i+sess_off)*l_sess+Sa(2,i), Ya2(k, :, i), 'LineStyle', '-', 'Color', 'r', 'MarkerSize', 1,'LineWidth', 1);
+
             hold on;
             legIt = strcat('prediction ', num2str(k));
             legItems = [legItems, legIt];
@@ -52,7 +56,7 @@ function generic_err_ae_base_graph2D(M, Em, Er, l_m, Y2, Sy2, l_y, l_sess, x_off
     xlabel('Observations')
     ylabel(yLab)
 
-    legend(legItems)
+    %legend(legItems)
 
     %yyaxis right
     %M4 = zeros([m,n]);

@@ -1,11 +1,13 @@
-function [E2f, S2, S2Mean, S2Std, S2s, ma_err, sess_ma_idx, ob_ma_idx, mi_err, sess_mi_idx, ob_mi_idx]=generic_calc_ae_base_cont_rmse2D(Y2, Yh2, n_out, y_out, k_tob, t_in)
+function [E2f, S2, S2Mean, S2Std, S2s, ma_err, sess_ma_idx, ob_ma_idx, mi_err, sess_mi_idx, ob_mi_idx]=generic_calc_ae_base_cont_rmse2D(Y2, Yh2, n_out, y_out, k_tob, t_out_ae)
 
     [~, ktob_tin, nsess]=size(Y2);
 
-    E2f = zeros([y_out, k_tob-1, nsess]);
+    n_sw = floor(ktob_tin/t_out_ae)-1;
+
+    E2f = zeros([n_out, n_sw, nsess]);
   
-    for j=2:k_tob
-        E2f(:, j-1, :) = ((Y2(1:y_out, (j-1)*t_in+1, :) - Y2(1+n_out-y_out:n_out, (j-1)*t_in, :))).^2;
+    for j=1:n_sw
+        E2f(:, j, :) = ((Y2(1:n_out, j*t_out_ae+1, :) - Y2(1:n_out, j*t_out_ae, :))).^2;
     end
     
     [skn, sjf, sif] = size(E2f);

@@ -1,9 +1,9 @@
-function [X, Xc, Xr, Xs, Ys, Y, Bi, Bo, XI, C, Sx, Sy, k_ob, t_inp, Vit, Xp, Xcp, Xrp, Xsp, PcaSc] = generic_train_ae_base_tensors2D(M, x_off, x_in, t_in, y_off, y_out, t_out, l_sess, n_sess, norm_fli, norm_flo, x_pca, k_inj)
+function [X, Xc, Xr, Xs, Ys, Y, Bi, Bo, XI, C, Sx, Sy, k_ob, t_inp, Vit, Xp, Xcp, Xrp, Xsp, PcaSc] = generic_train_ae_base_tensors2D(M, x_off, x_in, t_in, y_off, y_out, t_out, t_out_ae, l_sess, n_sess, norm_fli, norm_flo, x_pca, k_inj)
     %t_inp - training overflow to give stability
-    t_inp = floor(t_in * 1.2);
+    t_inp = floor(t_out_ae * 1.2);
 
     % Number of observations in a session
-    k_ob = l_sess - t_in - t_inp + 1 - t_in - t_out;
+    k_ob = l_sess - t_in - t_inp + 1 - t_in - t_out_ae;
 
     m_in = x_in * t_in;
     n_out = y_out * t_out;
