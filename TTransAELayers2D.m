@@ -1,10 +1,10 @@
-classdef TBTransAELayers2D
+classdef TTransAELayers2D
     properties
     end
 
     methods
 
-        function net = TBTransAELayers2D()
+        function net = TTransAELayers2D()
         end
 
 
@@ -19,7 +19,7 @@ classdef TBTransAELayers2D
                 %?LrMultiplyLayer("Multiply", net.m_in, floor(net.k_prod/net.m_in)) 
                 fullyConnectedLayer(net.k_prod,'Name','inputFeatureExt')
 
-                cosPeTransformerLayer(net.k_prod, "bt_k_prod")
+                %cosPeTransformerLayer(net.k_prod, "bt_k_prod")
 
 
 

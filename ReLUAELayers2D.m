@@ -1,10 +1,10 @@
-classdef TBTransAELayers2D
+classdef ReLUAELayers2D
     properties
     end
 
     methods
 
-        function net = TBTransAELayers2D()
+        function net = ReLUAELayers2D()
         end
 
 
@@ -13,25 +13,22 @@ classdef TBTransAELayers2D
             layers = [
                 featureInputLayer(net.m_in+net.k_inject)
 
-                cosPcTransformerLayer(net.m_in+net.k_inject, "pet_tr")
-
                 %%MultiplyLayer("Multiply", net.m_in, floor(net.k_prod/net.m_in)) 
                 %?LrMultiplyLayer("Multiply", net.m_in, floor(net.k_prod/net.m_in)) 
                 fullyConnectedLayer(net.k_prod,'Name','inputFeatureExt')
 
-                cosPeTransformerLayer(net.k_prod, "bt_k_prod")
-
+                %cosPeTransformerLayer(net.k_prod, "bt_k_prod")
 
 
                 fullyConnectedLayer(net.k_bottle,'Name','FeatureBottle') 
 
-                LrReLULayer('LrReLU1', net.k_bottle, 1)
-                
+                %LrReLULayer('LrReLU1', net.k_bottle, 1)
+                reluLayer
 
                 fullyConnectedLayer(net.k_hid2)
                 
-                LrReLULayer('LrReLU2', net.k_hid2, 1)
-                
+                %LrReLULayer('LrReLU2', net.k_hid2, 1)
+                reluLayer
 
                 fullyConnectedLayer(net.n_out)
                 regressionLayer

@@ -1,10 +1,10 @@
-classdef TBTransAELayers2D
+classdef resTTransAELayers2D
     properties
     end
 
     methods
 
-        function net = TBTransAELayers2D()
+        function net = resTTransAELayers2D()
         end
 
 
@@ -13,24 +13,23 @@ classdef TBTransAELayers2D
             layers = [
                 featureInputLayer(net.m_in+net.k_inject)
 
-                cosPcTransformerLayer(net.m_in+net.k_inject, "pet_tr")
+                residualTransformerLayer(net.m_in+net.k_inject, net.k_inject, "pet_tr")
 
-                %%MultiplyLayer("Multiply", net.m_in, floor(net.k_prod/net.m_in)) 
-                %?LrMultiplyLayer("Multiply", net.m_in, floor(net.k_prod/net.m_in)) 
-                fullyConnectedLayer(net.k_prod,'Name','inputFeatureExt')
-
-                cosPeTransformerLayer(net.k_prod, "bt_k_prod")
+                residualFCLayer(net.m_in+2*net.k_inject, net.k_prod+net.k_inject, net.k_inject, 'inputFeatureExt')
 
 
+                %residualDpBatchTransformerLayer(net.k_prod+2*net.k_inject, net.k_inject, "b_k_hid1")
 
-                fullyConnectedLayer(net.k_bottle,'Name','FeatureBottle') 
 
-                LrReLULayer('LrReLU1', net.k_bottle, 1)
+                residualFCLayer(net.k_prod+2*net.k_inject, net.k_bottle+net.k_inject, net.k_inject,'FeatureBottle') 
+
+
+                LrReLULayer('LrReLU1', net.k_bottle+2*net.k_inject, 1)
                 
 
-                fullyConnectedLayer(net.k_hid2)
+                residualFCLayer(net.k_bottle+2*net.k_inject, net.k_hid2+net.k_inject, net.k_inject,'FeatureExt2') 
                 
-                LrReLULayer('LrReLU2', net.k_hid2, 1)
+                LrReLULayer('LrReLU2', net.k_hid2+2*net.k_inject, 1)
                 
 
                 fullyConnectedLayer(net.n_out)
