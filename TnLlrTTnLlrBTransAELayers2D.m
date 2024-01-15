@@ -1,10 +1,10 @@
-classdef BTransAELayers2D
+classdef TnLlrTTnLlrBTransAELayers2D
     properties
     end
 
     methods
 
-        function net = BTransAELayers2D()
+        function net = TnLlrTTnLlrBTransAELayers2D()
         end
 
 
@@ -12,12 +12,15 @@ classdef BTransAELayers2D
 
             layers = [
                 featureInputLayer(net.m_in+net.k_inject)
+
+                cosPeTnLrLReLUTransformerLayer(net.m_in+net.k_inject,1,1,1,1,"pet_1")
+
                 %%MultiplyLayer("Multiply", net.m_in, floor(net.k_prod/net.m_in)) 
                 %?LrMultiplyLayer("Multiply", net.m_in, floor(net.k_prod/net.m_in)) 
                 fullyConnectedLayer(net.k_prod,'Name','inputFeatureExt')
 
 
-                cosPcTransformerLayer(net.k_prod, "b_k_hid1")
+                cosPcTnLrLReLUTransformerLayer(net.k_prod,1,1,1,1,"pct_1")
                 %euBatchTransformerLayer(net.k_hid1, "b_k_hid1")
                 %%vTransformerLayer(net.k_hid1, "b_k_hid1")
                 %%dpTransformerLayer(net.k_hid1, "b_k_hid1")

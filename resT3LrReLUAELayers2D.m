@@ -1,10 +1,10 @@
-classdef res3LrReLUAELayers2D
+classdef resT3LrReLUAELayers2D
     properties
     end
 
     methods
 
-        function net = res3LrReLUAELayers2D()
+        function net = resT3LrReLUAELayers2D()
         end
 
 
@@ -13,9 +13,9 @@ classdef res3LrReLUAELayers2D
             layers = [
                 featureInputLayer(net.m_in+net.k_inject)
 
-                %residualTransformerLayer(net.m_in+net.k_inject, net.k_inject, "pet_tr")
+                residualTransformerLayer(net.m_in+net.k_inject, net.k_inject, "pet_tr")
 
-                residualFCLayer(net.m_in+net.k_inject, net.k_prod+net.k_inject, net.k_inject, 'inputFeatureExt')
+                residualFCLayer(net.m_in+2*net.k_inject, net.k_prod+net.k_inject, net.k_inject, 'inputFeatureExt')
 
                 LrReLULayer('LrReLU0', net.k_prod+2*net.k_inject, 1)
                 %residualDpBatchTransformerLayer(net.k_prod+2*net.k_inject, net.k_inject, "b_k_hid1")

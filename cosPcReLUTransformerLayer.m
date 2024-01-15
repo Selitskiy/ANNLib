@@ -1,4 +1,4 @@
-classdef LrReLULayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
+classdef cosPcReLUTransformerLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
 
     properties
         % (Optional) Layer properties.
@@ -7,22 +7,26 @@ classdef LrReLULayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
 
         % Number input channels
         numInChannels
-        %numOutChannels
+        numOutChannels
     end
 
     properties (Learnable)
         % (Optional) Layer learnable parameters.
-
-        % Declare learnable parameters here.
-        A
-
-        slope
-        %B
         
         % Weights
-        %W
+        Wq
+        Wk
+
         %Bias
-        %W0
+        Wq0
+        Wk0
+
+        %ReLU parms
+        Aq
+        Ak
+        slopeQ
+        slopeK
+
     end
 
     %properties (State)
@@ -39,7 +43,7 @@ classdef LrReLULayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
     %end
 
     methods
-        function layer = LrReLULayer(name, numInChannels, slope) %, numOutChannels)
+        function layer = cosPcReLUTransformerLayer(numInChannels, name)
             % (Optional) Create a myLayer.
             % This function must have the same name as the class.
 
@@ -49,33 +53,23 @@ classdef LrReLULayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
             layer.Name = name;
 
             % Set layer description.
-            layer.Description = "LReLU layer";
+            layer.Description = "Transformer" + numInChannels + " channels";
 
             layer.numInChannels = numInChannels;
-            %layer.numOutChannels = numOutChannels;
-
-            layer.slope = slope;
-
-            % Initialize scaling coefficient.
-            if slope == 0
-                layer.A = rand([numInChannels 1]);
-            else
-                layer.A = ones([numInChannels 1]) * slope;
-            end
-
-            %layer.An = rand([numInChannels 1]); 
-
+            layer.numOutChannels = numInChannels;
+            
             % Initialize weight coefficients.
-            %layer.W = rand([layer.numOutChannels, layer.numInChannels]);
-            %bound = sqrt(6 / (layer.numOutChannels + layer.numInChannels));
-            %layer.W = bound * (2. * rand([layer.numOutChannels, layer.numInChannels],'single') - 1.);
+            bound = sqrt(6 / (layer.numOutChannels + layer.numInChannels));
+            
+            layer.Wq = bound * (2. * rand([layer.numOutChannels, layer.numInChannels],'single') - 1.);
+            layer.Wq0 = zeros([layer.numOutChannels, 1]);
 
-            %layer.W0 = rand([layer.numOutChannels, 1]);
-            %layer.W0 = zeros([layer.numOutChannels, 1]);
+            layer.Wk = bound * (2. * rand([layer.numOutChannels, layer.numInChannels],'single') - 1.);
+            layer.Wk0 = zeros([layer.numOutChannels, 1]);
 
         end
 
-        function Z = predict(layer, X)
+        function [Z] = predict(layer, X)
             % Forward input data through the layer at prediction time and
             % output the result and updated state.
             %
@@ -95,16 +89,26 @@ classdef LrReLULayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
             %    parameters.
 
             % Define layer predict function here.
-
+            % c - channels, n - observations
             [c, n] = size(X);
 
-            layer.A(layer.A > layer.slope) = layer.slope;
-            layer.A(layer.A < 0) = 0;
 
-            PM = X>=0;
+            K = gelu(layer.Wk * X + layer.Wk0);
+            Q = gelu(layer.Wq * X + layer.Wq0);
 
-            Z = layer.A .* X .* PM;
 
+            DK2 = sum(K .* K, 1);
+            DQ2 = sum(Q .* Q, 1);
+            DQK2 = DQ2' * DK2;
+            DQK = sqrt(DQK2);
+
+            Y = (Q' * K) ./ DQK;
+
+            SM = softmax(Y', 'DataFormat', 'CB');
+            
+            Z = X * SM;
+
+            %fprintf('state c=%d n=%d\n', c, n);
         end
 
         %function [Z,state,memory] = forward(layer,X)
@@ -136,6 +140,8 @@ classdef LrReLULayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
             % (Optional) Reset layer state.
 
             % Define reset state function here.
+        %    layer.M = zeros([2, 2]);
+        %    layer.MFill = 0;
         %end
 
         %function [dLdX,dLdW,dLdSin] = backward(layer,X,Z,dLdZ,dLdSout,memory)

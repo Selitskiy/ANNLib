@@ -37,7 +37,7 @@ classdef cosPeTransformerLayer < nnet.layer.Layer % & nnet.layer.Formattable (Op
     %end
 
     methods
-        function layer = dpBatchTransformerLayer(numInChannels, name)
+        function layer = cosPeTransformerLayer(numInChannels, name)
             % (Optional) Create a myLayer.
             % This function must have the same name as the class.
 

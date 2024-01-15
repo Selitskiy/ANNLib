@@ -1,10 +1,10 @@
-classdef res3LrReLUAELayers2D
+classdef resTnTTnBTransAELayers2D
     properties
     end
 
     methods
 
-        function net = res3LrReLUAELayers2D()
+        function net = resTnTTnBTransAELayers2D()
         end
 
 
@@ -13,15 +13,15 @@ classdef res3LrReLUAELayers2D
             layers = [
                 featureInputLayer(net.m_in+net.k_inject)
 
-                %residualTransformerLayer(net.m_in+net.k_inject, net.k_inject, "pet_tr")
+                residualCosPeTransformerLayer(net.m_in+net.k_inject, net.k_inject, "pet_1")
 
-                residualFCLayer(net.m_in+net.k_inject, net.k_prod+net.k_inject, net.k_inject, 'inputFeatureExt')
-
-                LrReLULayer('LrReLU0', net.k_prod+2*net.k_inject, 1)
-                %residualDpBatchTransformerLayer(net.k_prod+2*net.k_inject, net.k_inject, "b_k_hid1")
+                residualFCLayer(net.m_in+2*net.k_inject, net.k_prod+net.k_inject, net.k_inject, 'inputFeatureExt')
 
 
-                residualFCLayer(net.k_prod+2*net.k_inject, net.k_bottle+net.k_inject, net.k_inject,'FeatureBottle') 
+                residualCosPcTransformerLayer(net.k_prod+2*net.k_inject, net.k_inject, "pct_1")
+
+
+                residualFCLayer(net.k_prod+3*net.k_inject, net.k_bottle+net.k_inject, net.k_inject,'FeatureBottle') 
 
 
                 LrReLULayer('LrReLU1', net.k_bottle+2*net.k_inject, 1)

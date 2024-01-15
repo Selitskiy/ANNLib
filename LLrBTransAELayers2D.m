@@ -1,10 +1,10 @@
-classdef BTransAELayers2D
+classdef LLrBTransAELayers2D
     properties
     end
 
     methods
 
-        function net = BTransAELayers2D()
+        function net = LLrBTransAELayers2D()
         end
 
 
@@ -17,7 +17,7 @@ classdef BTransAELayers2D
                 fullyConnectedLayer(net.k_prod,'Name','inputFeatureExt')
 
 
-                cosPcTransformerLayer(net.k_prod, "b_k_hid1")
+                cosPcLrLReLUTransformerLayer(net.k_prod, 1, 1, 0.1, 0.1, "b_k_hid1")
                 %euBatchTransformerLayer(net.k_hid1, "b_k_hid1")
                 %%vTransformerLayer(net.k_hid1, "b_k_hid1")
                 %%dpTransformerLayer(net.k_hid1, "b_k_hid1")

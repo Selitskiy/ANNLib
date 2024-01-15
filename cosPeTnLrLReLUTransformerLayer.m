@@ -1,4 +1,4 @@
-classdef LrReLULayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
+classdef cosPeTnLrLReLUTransformerLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
 
     properties
         % (Optional) Layer properties.
@@ -7,22 +7,31 @@ classdef LrReLULayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
 
         % Number input channels
         numInChannels
-        %numOutChannels
+        numOutChannels
     end
 
     properties (Learnable)
         % (Optional) Layer learnable parameters.
-
-        % Declare learnable parameters here.
-        A
-
-        slope
-        %B
         
         % Weights
-        %W
+        Wq
+        Wk
+
         %Bias
-        %W0
+        Wq0
+        Wk0
+
+        %ReLU parms
+        Aq
+        Ak
+        slopeAq
+        slopeAk
+
+        Bq
+        Bk
+        slopeBq
+        slopeBk
+
     end
 
     %properties (State)
@@ -39,7 +48,7 @@ classdef LrReLULayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
     %end
 
     methods
-        function layer = LrReLULayer(name, numInChannels, slope) %, numOutChannels)
+        function layer = cosPeTnLrLReLUTransformerLayer(numInChannels, slopeAq, slopeAk, slopeBq, slopeBk, name)
             % (Optional) Create a myLayer.
             % This function must have the same name as the class.
 
@@ -49,33 +58,57 @@ classdef LrReLULayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
             layer.Name = name;
 
             % Set layer description.
-            layer.Description = "LReLU layer";
+            layer.Description = "Transformer" + numInChannels + " channels";
 
             layer.numInChannels = numInChannels;
-            %layer.numOutChannels = numOutChannels;
+            layer.numOutChannels = numInChannels;
+            
+            % Initialize weight coefficients.
+            bound = sqrt(6 / (layer.numOutChannels + layer.numInChannels));
+            
+            layer.Wq = bound * (2. * rand([layer.numOutChannels, layer.numInChannels],'single') - 1.);
+            layer.Wq0 = zeros([layer.numOutChannels, 1]);
 
-            layer.slope = slope;
+            layer.Wk = bound * (2. * rand([layer.numOutChannels, layer.numInChannels],'single') - 1.);
+            layer.Wk0 = zeros([layer.numOutChannels, 1]);
 
-            % Initialize scaling coefficient.
-            if slope == 0
-                layer.A = rand([numInChannels 1]);
+
+            %Init learnable slopes
+            layer.slopeAq = slopeAq;
+
+            if slopeAq == 0
+                layer.Aq = rand([numInChannels 1]);
             else
-                layer.A = ones([numInChannels 1]) * slope;
+                layer.Aq = ones([numInChannels 1]) * slopeAq;
             end
 
-            %layer.An = rand([numInChannels 1]); 
+            layer.slopeAk = slopeAk;
 
-            % Initialize weight coefficients.
-            %layer.W = rand([layer.numOutChannels, layer.numInChannels]);
-            %bound = sqrt(6 / (layer.numOutChannels + layer.numInChannels));
-            %layer.W = bound * (2. * rand([layer.numOutChannels, layer.numInChannels],'single') - 1.);
+            if slopeAk == 0
+                layer.Ak = rand([numInChannels 1]);
+            else
+                layer.Ak = ones([numInChannels 1]) * slopeAk;
+            end
 
-            %layer.W0 = rand([layer.numOutChannels, 1]);
-            %layer.W0 = zeros([layer.numOutChannels, 1]);
 
+            layer.slopeBq = slopeBq;
+
+            if slopeBq == 0
+                layer.Bq = rand([numInChannels 1]);
+            else
+                layer.Bq = ones([numInChannels 1]) * slopeBq;
+            end
+
+            layer.slopeBk = slopeBk;
+
+            if slopeBk == 0
+                layer.Bk = rand([numInChannels 1]);
+            else
+                layer.Bk = ones([numInChannels 1]) * slopeBk;
+            end
         end
 
-        function Z = predict(layer, X)
+        function [Z] = predict(layer, X)
             % Forward input data through the layer at prediction time and
             % output the result and updated state.
             %
@@ -95,16 +128,46 @@ classdef LrReLULayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
             %    parameters.
 
             % Define layer predict function here.
-
+            % c - channels, n - observations
             [c, n] = size(X);
 
-            layer.A(layer.A > layer.slope) = layer.slope;
-            layer.A(layer.A < 0) = 0;
 
-            PM = X>=0;
+            Kx = layer.Wk * X + layer.Wk0;
+            layer.Ak(layer.Ak > layer.slopeAk) = layer.slopeAk;
+            layer.Ak(layer.Ak < 0) = 0;
+            layer.Bk(layer.Bk > layer.slopeBk) = layer.slopeBk;
+            layer.Bk(layer.Bk < 0) = 0;
+            PMk = Kx>=0;
+            NMk = Kx<0;
+            Kp = layer.Ak .* Kx .* PMk;
+            Kn = layer.Ak .* Kx .* NMk;
+            K = tanh(Kp + Kn);
 
-            Z = layer.A .* X .* PM;
 
+            Qx = layer.Wq * X + layer.Wq0;
+            layer.Aq(layer.Aq > layer.slopeAq) = layer.slopeAq;
+            layer.Aq(layer.Aq < 0) = 0;
+            layer.Bq(layer.Bq > layer.slopeBq) = layer.slopeBq;
+            layer.Bq(layer.Bq < 0) = 0;
+            PMq = Qx>=0;
+            NMq = Qx<0;
+            Qp = layer.Aq .* Qx .* PMq;
+            Qn = layer.Aq .* Qx .* NMq;
+            Q = tanh(Qp + Qn);
+
+
+            DK2 = sum(K .* K, 1);
+            DQ2 = sum(Q .* Q, 1);
+            DQK2 = DQ2' * DK2;
+            DQK = sqrt(DQK2);
+
+            Y = (Q' * K) ./ DQK;
+
+            SM = softmax(Y', 'DataFormat', 'CB');
+            
+            Z = X * SM;
+
+            %fprintf('state c=%d n=%d\n', c, n);
         end
 
         %function [Z,state,memory] = forward(layer,X)
@@ -136,6 +199,8 @@ classdef LrReLULayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
             % (Optional) Reset layer state.
 
             % Define reset state function here.
+        %    layer.M = zeros([2, 2]);
+        %    layer.MFill = 0;
         %end
 
         %function [dLdX,dLdW,dLdSin] = backward(layer,X,Z,dLdZ,dLdSout,memory)
