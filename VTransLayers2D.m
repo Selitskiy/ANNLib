@@ -19,13 +19,14 @@ classdef VTransLayers2D
                 additionLayer(2,'Name','fcAgate2')
                 layerNormalizationLayer('Name','fcNorm2')
                 
-                fullyConnectedLayer(net.k_hid2,'Name','FeatureExt2')
+                fullyConnectedLayer(net.k_hid1,'Name','FeatureExt2')
 
                 additionLayer(2,'Name','fcAgate3')
                 layerNormalizationLayer('Name','fcNorm3')
+
                 fullyConnectedLayer(net.k_hid2,'Name','fcHidden3')
-                additionLayer(2,'Name','fcAgate4')
-                layerNormalizationLayer('Name','fcNorm4')    
+                %additionLayer(2,'Name','fcAgate4')
+                %layerNormalizationLayer('Name','fcNorm4')    
 
                 fullyConnectedLayer(net.n_out,'Name','fcOut')
                 regressionLayer('Name','regOut')
@@ -33,19 +34,24 @@ classdef VTransLayers2D
             cgraph = layerGraph(oLayers);
 
             tLayers = [
-                vTransformerLayer(net.k_hid1,'trans')
+                %vTransformerLayer(net.k_hid1,'trans')
+                vTransformerLayer(net.m_in,'trans')
             ];
 
             cgraph = addLayers(cgraph, tLayers);
     
-            cgraph = connectLayers(cgraph, 'inputFeatureExt', 'trans');
-            cgraph = connectLayers(cgraph,'trans','fcAgate/in2');
+            %cgraph = connectLayers(cgraph, 'inputFeatureExt', 'trans');
+            cgraph = connectLayers(cgraph, 'inputFeature', 'trans');
 
-            cgraph = connectLayers(cgraph,'fcNorm','fcAgate2/in2');
+            %cgraph = connectLayers(cgraph,'trans','fcAgate/in2');
+            cgraph = connectLayers(cgraph,'trans','fcAgate2/in2');
+
+            %cgraph = connectLayers(cgraph,'fcNorm','fcAgate2/in2');
+            %cgraph = connectLayers(cgraph,'inputFeature','fcAgate2/in2');
 
 
             t2Layers = [
-                vTransformerLayer(net.k_hid2,'trans2')
+                vTransformerLayer(net.k_hid1,'trans2')
             ];
 
             cgraph = addLayers(cgraph, t2Layers);
@@ -53,8 +59,8 @@ classdef VTransLayers2D
             cgraph = connectLayers(cgraph, 'FeatureExt2', 'trans2');
             cgraph = connectLayers(cgraph,'trans2','fcAgate3/in2');
 
-            cgraph = connectLayers(cgraph,'fcNorm3','fcAgate4/in2');
-    
+            %cgraph = connectLayers(cgraph,'fcNorm3','fcAgate4/in2');
+            %cgraph = connectLayers(cgraph,'FeatureExt2','fcAgate3/in2');
 
             net.lGraph = cgraph;
 

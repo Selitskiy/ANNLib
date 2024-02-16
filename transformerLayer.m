@@ -8,7 +8,7 @@ classdef transformerLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optiona
         % Number input channels
         numInChannels
         numOutChannels
-        %sqrt_dk
+        sqrt_dk
     end
 
     properties (Learnable)
@@ -51,7 +51,7 @@ classdef transformerLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optiona
             layer.Description = "Transformer" + numInChannels + " channels";
 
             layer.numInChannels = numInChannels;
-            %layer.sqrt_dk = sqrt(numInChannels);
+            layer.sqrt_dk = sqrt(numInChannels);
             layer.numOutChannels = numInChannels;
 
             % Initialize weight coefficients.
@@ -97,11 +97,11 @@ classdef transformerLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optiona
 
             %%dk = max(K' * K, [], 'all');
             %%dq = max(Q' * Q, [], 'all');
-            dk = mean(K' * K, 'all');
-            dq = mean(Q' * Q, 'all');
+            %dk = mean(K' * K, 'all');
+            %dq = mean(Q' * Q, 'all');
 
-            Y = (Q' * K) ./ (dk + dq);
-            %Y = (Q' * K) ./ layer.sqrt_dk;
+            %Y = (Q' * K) ./ (dk + dq);
+            Y = (Q' * K) ./ layer.sqrt_dk;
 
             Z = V * softmax(Y', 'DataFormat', 'CB');
             %SM = softmax(Y', 'DataFormat', 'CB');

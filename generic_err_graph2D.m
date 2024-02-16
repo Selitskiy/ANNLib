@@ -45,10 +45,15 @@ function generic_err_graph2D(M, Em, Er, l_m, Y2, Sy2, l_y, l_sess, x_off, x_in, 
     end
 
     title(strcat("Model ",modelName))
-    xlabel('Observations')
-    ylabel(yLab)
 
-    legend(legItems)
+    ax = gca;
+    ax.FontSize = 20;
+    xlabel('Observations', 'FontSize', 20)
+    ylabel(yLab, 'FontSize', 20)
+
+
+
+    %legend(legItems)
 
     %yyaxis right
     M4 = zeros([m,n]);
