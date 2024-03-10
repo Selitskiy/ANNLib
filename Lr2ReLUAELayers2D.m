@@ -17,7 +17,7 @@ classdef Lr2ReLUAELayers2D
                 %?LrMultiplyLayer("Multiply", net.m_in, floor(net.k_prod/net.m_in)) 
                 fullyConnectedLayer(net.k_prod,'Name','inputFeatureExt')
 
-                %cosPeTransformerLayer(net.k_prod, "bt_k_prod")
+                %cosPcTransformerLayer(net.k_prod, "bt_k_prod")
                 %LrReLULayer('LrReLU0', net.k_prod, 1)
 
 

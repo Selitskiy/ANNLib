@@ -13,13 +13,13 @@ classdef TLr3ReLUAELayers2D
             layers = [
                 featureInputLayer(net.m_in+net.k_inject)
 
-                cosPcTransformerLayer(net.m_in+net.k_inject, "pet_tr")
+                cosPeTransformerLayer(net.m_in+net.k_inject, "pet_tr")
 
                 %%MultiplyLayer("Multiply", net.m_in, floor(net.k_prod/net.m_in)) 
                 %?LrMultiplyLayer("Multiply", net.m_in, floor(net.k_prod/net.m_in)) 
                 fullyConnectedLayer(net.k_prod,'Name','inputFeatureExt')
 
-                %cosPeTransformerLayer(net.k_prod, "bt_k_prod")
+                %cosPcTransformerLayer(net.k_prod, "bt_k_prod")
 		        LrReLULayer('LrReLU0', net.k_prod, 1)
 
 

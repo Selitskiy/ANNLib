@@ -1,4 +1,4 @@
-classdef conv2x1Layer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
+classdef residualConv2x1GaussLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
 
     properties
         % (Optional) Layer properties.
@@ -8,6 +8,7 @@ classdef conv2x1Layer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
         % Number input channels
         numInChannels
         numOutChannels
+        numResChannels
 
         fSizeX
         fSizeY
@@ -43,7 +44,7 @@ classdef conv2x1Layer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
     %end
 
     methods
-        function layer = conv2x1Layer(numImgV, numImgH, fSizeX, fSizeY, fStrideX, fStrideY, nFilters, name)
+        function layer = residualConv2x1GaussLayer(numImgV, numImgH, fSizeX, fSizeY, fStrideX, fStrideY, nFilters, numResChannels, name)
             % (Optional) Create a myLayer.
             % This function must have the same name as the class.
 
@@ -57,10 +58,14 @@ classdef conv2x1Layer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
 
             layer.numInChannels = numImgV * numImgH;
             layer.numOutChannels = ceil((numImgH - fSizeX + 1)/fStrideX) * ceil((numImgV - fSizeY + 1)/fStrideY);
+            layer.numResChannels = numResChannels;
+
             layer.fLen = fSizeX * fSizeY;
             layer.nFilters = nFilters;
             layer.fSizeX = fSizeX;
             layer.fSizeY = fSizeY;
+            layer.fStrideX = fStrideX;
+            layer.fStrideY = fStrideY;
 
             % Initialize weight coefficients.
             bound = sqrt(6 / (layer.fLen + layer.nFilters));
@@ -68,6 +73,21 @@ classdef conv2x1Layer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
             layer.W = bound * (2. * rand([layer.nFilters, layer.fLen],'single') - 1.);
 
             layer.M = zeros([layer.fLen, layer.numInChannels*layer.numOutChannels]);
+
+
+            %Gauss filter
+            uX = fSizeX/2;
+            uY = fSizeY/2;
+            sR2 = 0;
+            nR = 0;
+            for m=1:fSizeY
+                for n=1:fSizeX
+                    sR2 = sR2 + (n-0.5 - uX)*(n-0.5 - uX) + (m-0.5 - uY)*(m-0.5 - uY);
+                    nR = nR +1;
+                end
+            end
+            varR = sR2/nR;
+            sigR = sqrt(varR);
 
 
             %Fill the Mask
@@ -87,7 +107,7 @@ classdef conv2x1Layer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
 
                             p = pI + pF + (n-1) + (m-1)*numImgH;
 
-                            layer.M(i, p) = 1;
+                            layer.M(i, p) = 1/(sqrt(2*pi)*sigR)*exp(-((n-0.5 - uX)*(n-0.5 - uX) + (m-0.5 - uY)*(m-0.5 - uY))/(2*varR));
 
                         end
                     end
@@ -125,7 +145,9 @@ classdef conv2x1Layer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
 
             F1 = reshape(sum(F,1), [layer.numInChannels, layer.numOutChannels]);
 
-            Z = (X' * F1)';
+            Y = (X(1:layer.numInChannels,:)' * F1)';
+
+            Z = vertcat(Y, X(layer.numInChannels+1:layer.numInChannels+layer.numResChannels,:));
 
 
             %fprintf('state c=%d n=%d\n', c, n);

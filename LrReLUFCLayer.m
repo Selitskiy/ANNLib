@@ -1,4 +1,4 @@
-classdef conv2x1Layer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
+classdef LrReLUFCLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
 
     properties
         % (Optional) Layer properties.
@@ -9,23 +9,21 @@ classdef conv2x1Layer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
         numInChannels
         numOutChannels
 
-        fSizeX
-        fSizeY
-        fStrideX
-        fStrideY
-        nFilters
-
-        fLen
-
-        %Mask
-        M
     end
 
     properties (Learnable)
         % (Optional) Layer learnable parameters.
+
+        % Declare learnable parameters here.
+        A
+
+        slope
         
-        % Filters' Weights
+        % Weights
         W
+
+        %Bias
+        W0
 
     end
 
@@ -43,7 +41,7 @@ classdef conv2x1Layer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
     %end
 
     methods
-        function layer = conv2x1Layer(numImgV, numImgH, fSizeX, fSizeY, fStrideX, fStrideY, nFilters, name)
+        function layer = LrReLUFCLayer(numInChannels, numOutChannels, slope, name)
             % (Optional) Create a myLayer.
             % This function must have the same name as the class.
 
@@ -53,48 +51,29 @@ classdef conv2x1Layer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
             layer.Name = name;
 
             % Set layer description.
-            layer.Description = "Convolution 2x1 " + numImgV*numImgH + " channels";
+            layer.Description = "LrReLU fullyConnected " + numInChannels + " channels";
 
-            layer.numInChannels = numImgV * numImgH;
-            layer.numOutChannels = ceil((numImgH - fSizeX + 1)/fStrideX) * ceil((numImgV - fSizeY + 1)/fStrideY);
-            layer.fLen = fSizeX * fSizeY;
-            layer.nFilters = nFilters;
-            layer.fSizeX = fSizeX;
-            layer.fSizeY = fSizeY;
+            layer.numInChannels = numInChannels;
+            layer.numOutChannels = numOutChannels;
 
             % Initialize weight coefficients.
-            bound = sqrt(6 / (layer.fLen + layer.nFilters));
+            bound = sqrt(6 / (layer.numOutChannels + layer.numInChannels));
             
-            layer.W = bound * (2. * rand([layer.nFilters, layer.fLen],'single') - 1.);
+            layer.W = bound * (2. * rand([layer.numOutChannels, layer.numInChannels],'single') - 1.);
+            layer.W0 = zeros([layer.numOutChannels, 1]);
 
-            layer.M = zeros([layer.fLen, layer.numInChannels*layer.numOutChannels]);
 
+            layer.slope = slope;
 
-            %Fill the Mask
-            cntI = 0;
-            for yF=1:fStrideY:(numImgV-fSizeY+1)
-                for xF=1:fStrideX:(numImgH-fSizeX+1)
-
-                    pF = (yF-1)*numImgH + xF;
-
-                    pI = cntI * layer.numInChannels;
-                    cntI = cntI + 1;
-
-                    for m=1:fSizeY
-                        for n=1:fSizeX
-
-                            i = (m-1)*fSizeX + n;
-
-                            p = pI + pF + (n-1) + (m-1)*numImgH;
-
-                            layer.M(i, p) = 1;
-
-                        end
-                    end
-                end
+            % Initialize scaling coefficient.
+            if slope == 0
+                layer.A = rand([layer.numOutChannels, layer.numInChannels]);
+            else
+                layer.A = ones([layer.numOutChannels, layer.numInChannels]) * slope;
             end
-           
 
+            %layer.W(layer.W > layer.slope) = layer.slope;
+            %layer.W(layer.W < 0) = 0;
 
         end
 
@@ -121,12 +100,17 @@ classdef conv2x1Layer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
             % c - channels, n - observations
             [c, n] = size(X);
 
-            F = reshape(layer.W * layer.M, [layer.nFilters, layer.numInChannels, layer.numOutChannels]);
 
-            F1 = reshape(sum(F,1), [layer.numInChannels, layer.numOutChannels]);
+            layer.A(layer.A > layer.slope) = layer.slope;
+            layer.A(layer.A < 0) = 0;
+            %layer.W(layer.W > layer.slope) = layer.slope;
+            %layer.W(layer.W < 0) = 0;
 
-            Z = (X' * F1)';
+            PM = X>=0;
 
+
+            Z = (layer.W .* layer.A) * (X .* PM) + layer.W0;
+            %Z = layer.W * (X .* PM) + layer.W0;
 
             %fprintf('state c=%d n=%d\n', c, n);
         end

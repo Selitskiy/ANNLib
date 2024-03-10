@@ -1,4 +1,4 @@
-classdef conv2x1Layer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
+classdef residualCosPcTransformerLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
 
     properties
         % (Optional) Layer properties.
@@ -8,24 +8,19 @@ classdef conv2x1Layer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
         % Number input channels
         numInChannels
         numOutChannels
-
-        fSizeX
-        fSizeY
-        fStrideX
-        fStrideY
-        nFilters
-
-        fLen
-
-        %Mask
-        M
+        numResChannels
     end
 
     properties (Learnable)
         % (Optional) Layer learnable parameters.
         
-        % Filters' Weights
-        W
+        % Weights
+        Wq
+        Wk
+
+        %Bias
+        Wq0
+        Wk0
 
     end
 
@@ -43,7 +38,7 @@ classdef conv2x1Layer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
     %end
 
     methods
-        function layer = conv2x1Layer(numImgV, numImgH, fSizeX, fSizeY, fStrideX, fStrideY, nFilters, name)
+        function layer = residualCosPcTransformerLayer(numInChannels, numResChannels, name)
             % (Optional) Create a myLayer.
             % This function must have the same name as the class.
 
@@ -53,48 +48,20 @@ classdef conv2x1Layer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
             layer.Name = name;
 
             % Set layer description.
-            layer.Description = "Convolution 2x1 " + numImgV*numImgH + " channels";
+            layer.Description = "Transformer" + numInChannels + " channels";
 
-            layer.numInChannels = numImgV * numImgH;
-            layer.numOutChannels = ceil((numImgH - fSizeX + 1)/fStrideX) * ceil((numImgV - fSizeY + 1)/fStrideY);
-            layer.fLen = fSizeX * fSizeY;
-            layer.nFilters = nFilters;
-            layer.fSizeX = fSizeX;
-            layer.fSizeY = fSizeY;
+            layer.numInChannels = numInChannels;
+            layer.numOutChannels = numInChannels;
+            layer.numResChannels = numResChannels;
 
             % Initialize weight coefficients.
-            bound = sqrt(6 / (layer.fLen + layer.nFilters));
+            bound = sqrt(6 / (layer.numOutChannels + layer.numInChannels));
             
-            layer.W = bound * (2. * rand([layer.nFilters, layer.fLen],'single') - 1.);
+            layer.Wq = bound * (2. * rand([layer.numOutChannels, layer.numInChannels],'single') - 1.);
+            layer.Wq0 = zeros([layer.numOutChannels, 1]);
 
-            layer.M = zeros([layer.fLen, layer.numInChannels*layer.numOutChannels]);
-
-
-            %Fill the Mask
-            cntI = 0;
-            for yF=1:fStrideY:(numImgV-fSizeY+1)
-                for xF=1:fStrideX:(numImgH-fSizeX+1)
-
-                    pF = (yF-1)*numImgH + xF;
-
-                    pI = cntI * layer.numInChannels;
-                    cntI = cntI + 1;
-
-                    for m=1:fSizeY
-                        for n=1:fSizeX
-
-                            i = (m-1)*fSizeX + n;
-
-                            p = pI + pF + (n-1) + (m-1)*numImgH;
-
-                            layer.M(i, p) = 1;
-
-                        end
-                    end
-                end
-            end
-           
-
+            layer.Wk = bound * (2. * rand([layer.numOutChannels, layer.numInChannels],'single') - 1.);
+            layer.Wk0 = zeros([layer.numOutChannels, 1]);
 
         end
 
@@ -121,12 +88,25 @@ classdef conv2x1Layer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
             % c - channels, n - observations
             [c, n] = size(X);
 
-            F = reshape(layer.W * layer.M, [layer.nFilters, layer.numInChannels, layer.numOutChannels]);
 
-            F1 = reshape(sum(F,1), [layer.numInChannels, layer.numOutChannels]);
+            K = layer.Wk * X + layer.Wk0;
+            Q = layer.Wq * X + layer.Wq0;
 
-            Z = (X' * F1)';
 
+            DK2 = sum(K' .* K', 1);
+            DQ2 = sum(Q' .* Q', 1);
+            DQK2 = DQ2' * DK2;
+            DQK = sqrt(DQK2);
+
+            Y = (Q * K') ./ DQK;
+
+
+            SM = softmax(Y, 'DataFormat', 'CB');
+            ZT = X' * SM;
+
+            Z = ZT';
+
+            Z = vertcat(Z, X(layer.numInChannels-layer.numResChannels+1:layer.numInChannels,:));
 
             %fprintf('state c=%d n=%d\n', c, n);
         end

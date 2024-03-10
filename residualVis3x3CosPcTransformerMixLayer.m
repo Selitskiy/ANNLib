@@ -1,4 +1,4 @@
-classdef residualVis3x3BatchTransformerLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
+classdef residualVis3x3CosPcTransformerMixLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
 
     properties
         % (Optional) Layer properties.
@@ -94,7 +94,7 @@ classdef residualVis3x3BatchTransformerLayer < nnet.layer.Layer % & nnet.layer.F
     %end
 
     methods
-        function layer = residualVis3x3BatchTransformerLayer(numInChannels, numPatchV, numPatchH, numResChannels, name)
+        function layer = residualVis3x3CosPcTransformerMixLayer(numInChannels, numPatchV, numPatchH, numResChannels, name)
             % (Optional) Create a myLayer.
             % This function must have the same name as the class.
 
@@ -115,50 +115,50 @@ classdef residualVis3x3BatchTransformerLayer < nnet.layer.Layer % & nnet.layer.F
             bound = sqrt(6 / (layer.numPatch + layer.numPatch));
             boundRes = sqrt(6 / (layer.numResChannels + layer.numResChannels));
             
-            layer.Wq1 = bound * (2. * rand([layer.numPatch, layer.numPatch],'single') - 1.);
-            layer.Wq01 = zeros([layer.numPatch, 1]);
-            layer.Wk1 = bound * (2. * rand([layer.numPatch, layer.numPatch],'single') - 1.);
-            layer.Wk01 = zeros([layer.numPatch, 1]);
+            layer.Wq1 = bound * (2. * rand([layer.numPatch+layer.numResChannels, layer.numPatch+layer.numResChannels],'single') - 1.);
+            layer.Wq01 = zeros([layer.numPatch+layer.numResChannels, 1]);
+            layer.Wk1 = bound * (2. * rand([layer.numPatch+layer.numResChannels, layer.numPatch+layer.numResChannels],'single') - 1.);
+            layer.Wk01 = zeros([layer.numPatch+layer.numResChannels, 1]);
 
-            layer.Wq2 = bound * (2. * rand([layer.numPatch, layer.numPatch],'single') - 1.);
-            layer.Wq02 = zeros([layer.numPatch, 1]);
-            layer.Wk2 = bound * (2. * rand([layer.numPatch, layer.numPatch],'single') - 1.);
-            layer.Wk02 = zeros([layer.numPatch, 1]);
+            layer.Wq2 = bound * (2. * rand([layer.numPatch+layer.numResChannels, layer.numPatch+layer.numResChannels],'single') - 1.);
+            layer.Wq02 = zeros([layer.numPatch+layer.numResChannels, 1]);
+            layer.Wk2 = bound * (2. * rand([layer.numPatch+layer.numResChannels, layer.numPatch+layer.numResChannels],'single') - 1.);
+            layer.Wk02 = zeros([layer.numPatch+layer.numResChannels, 1]);
 
-            layer.Wq3 = bound * (2. * rand([layer.numPatch, layer.numPatch],'single') - 1.);
-            layer.Wq03 = zeros([layer.numPatch, 1]);
-            layer.Wk3 = bound * (2. * rand([layer.numPatch, layer.numPatch],'single') - 1.);
-            layer.Wk03 = zeros([layer.numPatch, 1]);
+            layer.Wq3 = bound * (2. * rand([layer.numPatch+layer.numResChannels, layer.numPatch+layer.numResChannels],'single') - 1.);
+            layer.Wq03 = zeros([layer.numPatch+layer.numResChannels, 1]);
+            layer.Wk3 = bound * (2. * rand([layer.numPatch+layer.numResChannels, layer.numPatch+layer.numResChannels],'single') - 1.);
+            layer.Wk03 = zeros([layer.numPatch+layer.numResChannels, 1]);
 
-            layer.Wq4 = bound * (2. * rand([layer.numPatch, layer.numPatch],'single') - 1.);
-            layer.Wq04 = zeros([layer.numPatch, 1]);
-            layer.Wk4 = bound * (2. * rand([layer.numPatch, layer.numPatch],'single') - 1.);
-            layer.Wk04 = zeros([layer.numPatch, 1]);
+            layer.Wq4 = bound * (2. * rand([layer.numPatch+layer.numResChannels, layer.numPatch+layer.numResChannels],'single') - 1.);
+            layer.Wq04 = zeros([layer.numPatch+layer.numResChannels, 1]);
+            layer.Wk4 = bound * (2. * rand([layer.numPatch+layer.numResChannels, layer.numPatch+layer.numResChannels],'single') - 1.);
+            layer.Wk04 = zeros([layer.numPatch+layer.numResChannels, 1]);
 
-            layer.Wq5 = bound * (2. * rand([layer.numPatch, layer.numPatch],'single') - 1.);
-            layer.Wq05 = zeros([layer.numPatch, 1]);
-            layer.Wk5 = bound * (2. * rand([layer.numPatch, layer.numPatch],'single') - 1.);
-            layer.Wk05 = zeros([layer.numPatch, 1]);
+            layer.Wq5 = bound * (2. * rand([layer.numPatch+layer.numResChannels, layer.numPatch+layer.numResChannels],'single') - 1.);
+            layer.Wq05 = zeros([layer.numPatch+layer.numResChannels, 1]);
+            layer.Wk5 = bound * (2. * rand([layer.numPatch+layer.numResChannels, layer.numPatch+layer.numResChannels],'single') - 1.);
+            layer.Wk05 = zeros([layer.numPatch+layer.numResChannels, 1]);
 
-            layer.Wq6 = bound * (2. * rand([layer.numPatch, layer.numPatch],'single') - 1.);
-            layer.Wq06 = zeros([layer.numPatch, 1]);
-            layer.Wk6 = bound * (2. * rand([layer.numPatch, layer.numPatch],'single') - 1.);
-            layer.Wk06 = zeros([layer.numPatch, 1]);
+            layer.Wq6 = bound * (2. * rand([layer.numPatch+layer.numResChannels, layer.numPatch+layer.numResChannels],'single') - 1.);
+            layer.Wq06 = zeros([layer.numPatch+layer.numResChannels, 1]);
+            layer.Wk6 = bound * (2. * rand([layer.numPatch+layer.numResChannels, layer.numPatch+layer.numResChannels],'single') - 1.);
+            layer.Wk06 = zeros([layer.numPatch+layer.numResChannels, 1]);
 
-            layer.Wq7 = bound * (2. * rand([layer.numPatch, layer.numPatch],'single') - 1.);
-            layer.Wq07 = zeros([layer.numPatch, 1]);
-            layer.Wk7 = bound * (2. * rand([layer.numPatch, layer.numPatch],'single') - 1.);
-            layer.Wk07 = zeros([layer.numPatch, 1]);
+            layer.Wq7 = bound * (2. * rand([layer.numPatch+layer.numResChannels, layer.numPatch+layer.numResChannels],'single') - 1.);
+            layer.Wq07 = zeros([layer.numPatch+layer.numResChannels, 1]);
+            layer.Wk7 = bound * (2. * rand([layer.numPatch+layer.numResChannels, layer.numPatch+layer.numResChannels],'single') - 1.);
+            layer.Wk07 = zeros([layer.numPatch+layer.numResChannels, 1]);
 
-            layer.Wq8 = bound * (2. * rand([layer.numPatch, layer.numPatch],'single') - 1.);
-            layer.Wq08 = zeros([layer.numPatch, 1]);
-            layer.Wk8 = bound * (2. * rand([layer.numPatch, layer.numPatch],'single') - 1.);
-            layer.Wk08 = zeros([layer.numPatch, 1]);
+            layer.Wq8 = bound * (2. * rand([layer.numPatch+layer.numResChannels, layer.numPatch+layer.numResChannels],'single') - 1.);
+            layer.Wq08 = zeros([layer.numPatch+layer.numResChannels, 1]);
+            layer.Wk8 = bound * (2. * rand([layer.numPatch+layer.numResChannels, layer.numPatch+layer.numResChannels],'single') - 1.);
+            layer.Wk08 = zeros([layer.numPatch+layer.numResChannels, 1]);
 
-            layer.Wq9 = bound * (2. * rand([layer.numPatch, layer.numPatch],'single') - 1.);
-            layer.Wq09 = zeros([layer.numPatch, 1]);
-            layer.Wk9 = bound * (2. * rand([layer.numPatch, layer.numPatch],'single') - 1.);
-            layer.Wk09 = zeros([layer.numPatch, 1]);
+            layer.Wq9 = bound * (2. * rand([layer.numPatch+layer.numResChannels, layer.numPatch+layer.numResChannels],'single') - 1.);
+            layer.Wq09 = zeros([layer.numPatch+layer.numResChannels, 1]);
+            layer.Wk9 = bound * (2. * rand([layer.numPatch+layer.numResChannels, layer.numPatch+layer.numResChannels],'single') - 1.);
+            layer.Wk09 = zeros([layer.numPatch+layer.numResChannels, 1]);
 
 
             %layer.Wqr = boundRes * (2. * rand([layer.numResChannels, layer.numResChannels],'single') - 1.);
@@ -192,7 +192,7 @@ classdef residualVis3x3BatchTransformerLayer < nnet.layer.Layer % & nnet.layer.F
             % c - channels, n - observations
             [c, n] = size(X);
 
-            X1 = X(1:layer.numPatch,:);
+            X1 = vertcat( X(1:layer.numPatch,:), X(layer.numInChannels-layer.numResChannels+1:layer.numInChannels,:) );
             K1 = layer.Wk1 * X1 + layer.Wk01;
             Q1 = layer.Wq1 * X1 + layer.Wq01;
             DK21 = sum(K1' .* K1', 1);
@@ -201,7 +201,7 @@ classdef residualVis3x3BatchTransformerLayer < nnet.layer.Layer % & nnet.layer.F
             Y1 = (Q1 * K1') ./ DQK1;
             Z1 = (X1' * softmax(Y1, 'DataFormat', 'CB'))';
 
-            X2 = X(1+layer.numPatch:layer.numPatch*2,:);
+            X2 = vertcat( X(1+layer.numPatch:layer.numPatch*2,:), X(layer.numInChannels-layer.numResChannels+1:layer.numInChannels,:) );
             K2 = layer.Wk2 * X2 + layer.Wk02;
             Q2 = layer.Wq2 * X2 + layer.Wq02;
             DK22 = sum(K2' .* K2', 1);
@@ -210,7 +210,7 @@ classdef residualVis3x3BatchTransformerLayer < nnet.layer.Layer % & nnet.layer.F
             Y2 = (Q2 * K2') ./ DQK2;
             Z2 = (X2' * softmax(Y2, 'DataFormat', 'CB'))';
 
-            X3 = X(1+layer.numPatch*2:layer.numPatch*3,:);
+            X3 = vertcat( X(1+layer.numPatch*2:layer.numPatch*3,:), X(layer.numInChannels-layer.numResChannels+1:layer.numInChannels,:) );
             K3 = layer.Wk3 * X3 + layer.Wk03;
             Q3 = layer.Wq3 * X3 + layer.Wq03;
             DK23 = sum(K3' .* K3', 1);
@@ -219,7 +219,7 @@ classdef residualVis3x3BatchTransformerLayer < nnet.layer.Layer % & nnet.layer.F
             Y3 = (Q3 * K3') ./ DQK3;
             Z3 = (X3' * softmax(Y3, 'DataFormat', 'CB'))';
 
-            X4 = X(1+layer.numPatch*3:layer.numPatch*4,:);
+            X4 = vertcat( X(1+layer.numPatch*3:layer.numPatch*4,:), X(layer.numInChannels-layer.numResChannels+1:layer.numInChannels,:) );
             K4 = layer.Wk4 * X4 + layer.Wk04;
             Q4 = layer.Wq4 * X4 + layer.Wq04;
             DK24 = sum(K4' .* K4', 1);
@@ -228,7 +228,7 @@ classdef residualVis3x3BatchTransformerLayer < nnet.layer.Layer % & nnet.layer.F
             Y4 = (Q4 * K4') ./ DQK4;
             Z4 = (X4' * softmax(Y4, 'DataFormat', 'CB'))';
 
-            X5 = X(1+layer.numPatch*4:layer.numPatch*5,:);
+            X5 = vertcat( X(1+layer.numPatch*4:layer.numPatch*5,:), X(layer.numInChannels-layer.numResChannels+1:layer.numInChannels,:) );
             K5 = layer.Wk5 * X5 + layer.Wk05;
             Q5 = layer.Wq5 * X5 + layer.Wq05;
             DK25 = sum(K5' .* K5', 1);
@@ -237,7 +237,7 @@ classdef residualVis3x3BatchTransformerLayer < nnet.layer.Layer % & nnet.layer.F
             Y5 = (Q5 * K5') ./ DQK5;
             Z5 = (X5' * softmax(Y5, 'DataFormat', 'CB'))';
 
-            X6 = X(1+layer.numPatch*5:layer.numPatch*6,:);
+            X6 = vertcat( X(1+layer.numPatch*5:layer.numPatch*6,:), X(layer.numInChannels-layer.numResChannels+1:layer.numInChannels,:) );
             K6 = layer.Wk6 * X6 + layer.Wk06;
             Q6 = layer.Wq6 * X6 + layer.Wq06;
             DK26 = sum(K6' .* K6', 1);
@@ -246,7 +246,7 @@ classdef residualVis3x3BatchTransformerLayer < nnet.layer.Layer % & nnet.layer.F
             Y6 = (Q6 * K6') ./ DQK6;
             Z6 = (X6' * softmax(Y6, 'DataFormat', 'CB'))';
 
-            X7 = X(1+layer.numPatch*6:layer.numPatch*7,:);
+            X7 = vertcat( X(1+layer.numPatch*6:layer.numPatch*7,:), X(layer.numInChannels-layer.numResChannels+1:layer.numInChannels,:) );
             K7 = layer.Wk7 * X7 + layer.Wk07;
             Q7 = layer.Wq7 * X7 + layer.Wq07;
             DK27 = sum(K7' .* K7', 1);
@@ -255,7 +255,7 @@ classdef residualVis3x3BatchTransformerLayer < nnet.layer.Layer % & nnet.layer.F
             Y7 = (Q7 * K7') ./ DQK7;
             Z7 = (X7' * softmax(Y7, 'DataFormat', 'CB'))';
 
-            X8 = X(1+layer.numPatch*7:layer.numPatch*8,:);
+            X8 = vertcat( X(1+layer.numPatch*7:layer.numPatch*8,:), X(layer.numInChannels-layer.numResChannels+1:layer.numInChannels,:) );
             K8 = layer.Wk8 * X8 + layer.Wk08;
             Q8 = layer.Wq8 * X8 + layer.Wq08;
             DK28 = sum(K8' .* K8', 1);
@@ -264,7 +264,7 @@ classdef residualVis3x3BatchTransformerLayer < nnet.layer.Layer % & nnet.layer.F
             Y8 = (Q8 * K8') ./ DQK8;
             Z8 = (X8' * softmax(Y8, 'DataFormat', 'CB'))';
 
-            X9 = X(1+layer.numPatch*8:layer.numPatch*9,:);
+            X9 = vertcat( X(1+layer.numPatch*8:layer.numPatch*9,:), X(layer.numInChannels-layer.numResChannels+1:layer.numInChannels,:) );
             K9 = layer.Wk9 * X9 + layer.Wk09;
             Q9 = layer.Wq9 * X9 + layer.Wq09;
             DK29 = sum(K9' .* K9', 1);

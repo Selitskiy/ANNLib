@@ -1,4 +1,4 @@
-classdef residualVis3x3BatchTransformerLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
+classdef residualVis3x3CosPcTransformerLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
 
     properties
         % (Optional) Layer properties.
@@ -94,7 +94,7 @@ classdef residualVis3x3BatchTransformerLayer < nnet.layer.Layer % & nnet.layer.F
     %end
 
     methods
-        function layer = residualVis3x3BatchTransformerLayer(numInChannels, numPatchV, numPatchH, numResChannels, name)
+        function layer = residualVis3x3CosPcTransformerLayer(numInChannels, numPatchV, numPatchH, numResChannels, name)
             % (Optional) Create a myLayer.
             % This function must have the same name as the class.
 

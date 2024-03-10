@@ -10,34 +10,59 @@ classdef residualVis3x3BTransAEBaseLayers2D
 
         function net = Create(net)
 
+            v = sqrt(net.m_in - net.k_inject);
+            h = v;
+            fSizeX = 7;
+            fSizeY = 7;
+            fStrideX = 1;
+            fStrideY = 1;
+            conOut = ceil((h - fSizeX + 1)/fStrideX) * ceil((h - fSizeY + 1)/fStrideY);
+
             layers = [
                 featureInputLayer(net.m_in)
-                %fullyConnectedLayer(net.k_hid1,'Name','inputFeatureExt') %6*6
-                residualFCLayer(net.m_in, net.k_bottle0, net.k_inject, 'inputFeatureExt')
 
-                %vis3x3BatchTransformerLayer(9, "v_k_9") %6
-                residualVis3x3BatchTransformerLayer(net.k_bottle0+net.k_inject, net.l_patchV, net.l_patchH, net.k_inject, "v_k_9")
+                %residualCosPeTransformerLayer(net.m_in, net.k_inject, "PETrans")
+                %residualFCLayer(net.m_in+net.k_inject, net.k_bottle0, net.k_inject, 'inputFeatureExt')
+                residualVis1x1CosPcTransformerLayer(net.m_in, net.k_inject, "PETrans")
+                %residualFCLayer(net.m_in, net.k_bottle0, net.k_inject, 'inputFeatureExt')
 
-                %fullyConnectedLayer(net.k_bottle,'Name','FeatureBottle') 
-                residualFCLayer(net.k_bottle0+net.k_inject*2, net.k_bottle, net.k_inject, 'FeatureBottle')
+                residualConv2x1GaussLayer(v, h, fSizeX, fSizeY, fStrideX, fStrideY, 40, net.k_inject, 'conv2x1')
+                %residualConv2x1Layer(v, h, fSizeX, fSizeY, fStrideX, fStrideY, 40, net.k_inject, 'conv2x1')
+                residualFCLayer(conOut+net.k_inject, net.k_bottle0, net.k_inject, 'inputFeatureExt')
 
-                %dpBatchTransformerLayer(net.k_bottle, "b_k_hid1")
-                %dpBatchTransformerLayer(net.k_hid1+net.k_inject, "b_k_hid1")
-                residualDpBatchTransformerLayer(net.k_bottle+net.k_inject, net.k_inject, "b_k_hid1")
+                %residualFCLayer(net.m_in, net.k_bottle0, net.k_inject, 'inputFeatureExt')
 
-                %fullyConnectedLayer(net.k_bottle2,'Name','FeatureBottle2') 
-                residualFCLayer(net.k_bottle+net.k_inject*2, net.k_bottle2, net.k_inject, 'FeatureBottle2')
-
-                %LrReLULayer('LrReLU1', net.k_bottle2, 1)
-                LrReLULayer('LrReLU0', net.k_bottle2+net.k_inject, 1)
+                residualVis3x3CosPcTransformerLayer(net.k_bottle0+net.k_inject, net.l_patchV, net.l_patchH, net.k_inject, "v_k_9")
 
 
-                
-                %fullyConnectedLayer(2*net.n_out*net.k_bottle2+1)
-                residualFCLayer(net.k_bottle2+net.k_inject, 2*net.n_out*net.k_bottle2+1, net.k_inject, 'Feature2')
+                residualFCLayer(net.k_bottle0+net.k_inject, net.k_bottle, net.k_inject, 'FeatureBottle')
+                %residualFCLayer(net.k_bottle0+net.k_inject*2, net.k_bottle, net.k_inject, 'FeatureBottle')
 
-                LrReLULayer('LrReLU2', 2*net.n_out*net.k_bottle2+1+net.k_inject, 1)
-                
+                residualCosPcTransformerLayer(net.k_bottle+net.k_inject, net.k_inject, "PCTrans")
+                %residualCosPcTanhTransformerLayer(net.k_bottle+net.k_inject, net.k_inject, "PCTrans")
+                %residualVis1x1CosPcTransformerLayer(net.k_bottle+net.k_inject, net.k_inject, "PCTrans")
+
+
+                residualFCLayer(net.k_bottle+net.k_inject*2, net.k_bottle1a, net.k_inject, 'FeatureBottle1a')
+
+                residualCosPcTransformerLayer(net.k_bottle1a+net.k_inject, net.k_inject, "PCTrans1a")
+                %residualVis1x1CosPcTransformerLayer(net.k_bottle1a+net.k_inject, net.k_inject, "PCTrans1a")
+
+
+                residualFCLayer(net.k_bottle1a+net.k_inject*2, net.k_bottle1b, net.k_inject, 'FeatureBottle1b')
+
+                residualCosPcTransformerLayer(net.k_bottle1b+net.k_inject, net.k_inject, "PCTrans1b")
+                %residualVis1x1CosPcTransformerLayer(net.k_bottle1a+net.k_inject, net.k_inject, "PCTrans1a")
+
+
+
+                residualFCLayer(net.k_bottle1b+net.k_inject*2, net.k_bottle2, net.k_inject, 'FeatureBottle2')
+
+
+
+                LrReLUFCLayer(net.k_bottle2+net.k_inject, net.k_hid2, 1, "KNetExt")
+
+                LrReLULayer('LrReLU2', net.k_hid2, 1)
 
                 fullyConnectedLayer(net.n_out)
                 regressionLayer

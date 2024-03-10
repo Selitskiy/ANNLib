@@ -1,4 +1,4 @@
-classdef cosPeGeLUTransformerLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
+classdef cosPeReLUTransformerLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
 
     properties
         % (Optional) Layer properties.
@@ -21,6 +21,12 @@ classdef cosPeGeLUTransformerLayer < nnet.layer.Layer % & nnet.layer.Formattable
         Wq0
         Wk0
 
+        %ReLU parms
+        Aq
+        Ak
+        slopeQ
+        slopeK
+
     end
 
     %properties (State)
@@ -37,7 +43,7 @@ classdef cosPeGeLUTransformerLayer < nnet.layer.Layer % & nnet.layer.Formattable
     %end
 
     methods
-        function layer = cosPeGeLUTransformerLayer(numInChannels, name)
+        function layer = cosPeReLUTransformerLayer(numInChannels, name)
             % (Optional) Create a myLayer.
             % This function must have the same name as the class.
 
@@ -51,7 +57,7 @@ classdef cosPeGeLUTransformerLayer < nnet.layer.Layer % & nnet.layer.Formattable
 
             layer.numInChannels = numInChannels;
             layer.numOutChannels = numInChannels;
-
+            
             % Initialize weight coefficients.
             bound = sqrt(6 / (layer.numOutChannels + layer.numInChannels));
             
@@ -90,18 +96,17 @@ classdef cosPeGeLUTransformerLayer < nnet.layer.Layer % & nnet.layer.Formattable
             K = gelu(layer.Wk * X + layer.Wk0);
             Q = gelu(layer.Wq * X + layer.Wq0);
 
-            DK2 = sum(K' .* K', 1);
-            DQ2 = sum(Q' .* Q', 1);
+
+            DK2 = sum(K .* K, 1);
+            DQ2 = sum(Q .* Q, 1);
             DQK2 = DQ2' * DK2;
             DQK = sqrt(DQK2);
 
-            Y = (Q * K') ./ DQK;
+            Y = (Q' * K) ./ DQK;
 
-
-            SM = softmax(Y, 'DataFormat', 'CB');
-            ZT = X' * SM;
-
-            Z = ZT';
+            SM = softmax(Y', 'DataFormat', 'CB');
+            
+            Z = X * SM;
 
             %fprintf('state c=%d n=%d\n', c, n);
         end

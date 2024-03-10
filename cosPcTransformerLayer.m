@@ -51,7 +51,7 @@ classdef cosPcTransformerLayer < nnet.layer.Layer % & nnet.layer.Formattable (Op
 
             layer.numInChannels = numInChannels;
             layer.numOutChannels = numInChannels;
-            
+
             % Initialize weight coefficients.
             bound = sqrt(6 / (layer.numOutChannels + layer.numInChannels));
             
@@ -90,16 +90,18 @@ classdef cosPcTransformerLayer < nnet.layer.Layer % & nnet.layer.Formattable (Op
             K = layer.Wk * X + layer.Wk0;
             Q = layer.Wq * X + layer.Wq0;
 
-            DK2 = sum(K .* K, 1);
-            DQ2 = sum(Q .* Q, 1);
+            DK2 = sum(K' .* K', 1);
+            DQ2 = sum(Q' .* Q', 1);
             DQK2 = DQ2' * DK2;
             DQK = sqrt(DQK2);
 
-            Y = (Q' * K) ./ DQK;
+            Y = (Q * K') ./ DQK;
 
-            SM = softmax(Y', 'DataFormat', 'CB');
-            
-            Z = X * SM;
+
+            SM = softmax(Y, 'DataFormat', 'CB');
+            ZT = X' * SM;
+
+            Z = ZT';
 
             %fprintf('state c=%d n=%d\n', c, n);
         end

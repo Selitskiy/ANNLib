@@ -1,11 +1,15 @@
 classdef vis3x3BTransAEBaseNet2D < vis3x3BTransAEBaseLayers2D & BaseNet2D & MLPInputNet2D
 
     properties
+        k_bottle0
         k_bottle
         k_bottle2
         k_inject
         k_patchV
         k_patchH
+
+        l_patchV 
+        l_patchH
     end
 
     methods
@@ -19,13 +23,21 @@ classdef vis3x3BTransAEBaseNet2D < vis3x3BTransAEBaseLayers2D & BaseNet2D & MLPI
             net.k_patchV = 3;
             net.k_patchH = 3;
 
+            net.l_patchV = l_patchV;
+            net.l_patchH = l_patchH;
+
             net.k_inject = k_inject;
 
-            net.k_bottle = floor(l_patchV*net.k_patchV * l_patchH*net.k_patchH * bottle_coeff);
-            net.k_bottle2 = floor(l_patchV*net.k_patchV * l_patchH*net.k_patchH * bottle_coeff * bottle_coeff2);
+            m_in_int = l_patchV*net.k_patchV * l_patchH*net.k_patchH;
+            net.k_bottle0 = floor(net.m_in / m_in_int) * m_in_int;
+            net.k_bottle = floor(m_in_int * bottle_coeff);
+            net.k_bottle2 = floor(m_in_int * bottle_coeff * bottle_coeff2);
 
-            net.k_hid1 = l_patchV*net.k_patchV * l_patchH*net.k_patchH; %27*27; %9*3 * 9*3
-            net.k_hid2 = floor(2*net.n_out*net.k_bottle + 1);
+            %net.k_hid1 = l_patchV*net.k_patchV * l_patchH*net.k_patchH; %27*27; %9*3 * 9*3
+
+            net.k_hid1 = net.k_bottle2*net.n_out;
+            net.k_hid2 = floor(2*net.n_out*net.k_bottle2 + 1);
+
 
             net.name = "vis3x3bTransAeBase2d";
 

@@ -13,25 +13,25 @@ classdef TBLrBAELayers2D
             layers = [
                 featureInputLayer(net.m_in+net.k_inject)
 
-                cosPcTransformerLayer(net.m_in+net.k_inject, "pet_tr")
+                cosPeTransformerLayer(net.m_in+net.k_inject, "pet_tr")
 
                 %%MultiplyLayer("Multiply", net.m_in, floor(net.k_prod/net.m_in)) 
                 %?LrMultiplyLayer("Multiply", net.m_in, floor(net.k_prod/net.m_in)) 
                 fullyConnectedLayer(net.k_prod,'Name','inputFeatureExt')
 
-                cosPeTransformerLayer(net.k_prod, "bt_k_prod")
-		        %LrReLULayer('LrReLU0', net.k_prod, 1)
+                cosPcTransformerLayer(net.k_prod, "bt_k_prod")
+		 %LrReLULayer('LrReLU0', net.k_prod, 1)
 
 
                 fullyConnectedLayer(net.k_bottle,'Name','FeatureBottle') 
 
-                %cosPcTransformerLayer(net.k_bottle, "pet_tr2")
+                %cosPeTransformerLayer(net.k_bottle, "pet_tr2")
                 LrReLULayer('LrReLU1', net.k_bottle, 1)
                 
 
                 fullyConnectedLayer(net.k_hid2)
 
-                cosPeTransformerLayer(net.k_hid2, "pct2")
+                cosPcTransformerLayer(net.k_hid2, "pct2")
                 %LrReLULayer('LrReLU2', net.k_hid2, 1)
                 
 

@@ -1,9 +1,7 @@
-classdef residualVis3x3BTransAEBaseNet2D < residualVis3x3BTransAEBaseLayers2D & BaseNet2D & MLPInputNet2D
+classdef vis4x4x3BTransAEBaseNet2D < vis4x4x3BTransAEBaseLayers2D & BaseNet2D & MLPInputNet2D
 
     properties
         k_bottle0
-        k_bottle1a
-        k_bottle1b
         k_bottle
         k_bottle2
         k_inject
@@ -15,33 +13,30 @@ classdef residualVis3x3BTransAEBaseNet2D < residualVis3x3BTransAEBaseLayers2D & 
     end
 
     methods
-        function net = residualVis3x3BTransAEBaseNet2D(x_off, x_in, t_in, y_off, y_out, t_out, ini_rate, max_epoch,...
-                bottle_coeff, bottle_coeff1a, bottle_coeff1b, bottle_coeff2, l_patchV, l_patchH, k_inject)
+        function net = vis4x4x3BTransAEBaseNet2D(x_off, x_in, t_in, y_off, y_out, t_out, ini_rate, max_epoch,...
+                bottle_coeff, bottle_coeff2, l_patchV, l_patchH, k_inject)
 
             net = net@BaseNet2D(x_off, x_in, t_in, y_off, y_out, t_out, ini_rate, max_epoch);
             net = net@MLPInputNet2D();
-            net = net@residualVis3x3BTransAEBaseLayers2D();
+            net = net@vis4x4x3BTransAEBaseLayers2D();
 
-            net.k_patchV = 3;
-            net.k_patchH = 3;
+            net.k_patchV = 4;
+            net.k_patchH = 4;
 
             net.l_patchV = l_patchV;
             net.l_patchH = l_patchH;
 
             net.k_inject = k_inject;
 
-            m_in_int = l_patchV*net.k_patchV * l_patchH*net.k_patchH;
+            m_in_int = l_patchV*net.k_patchV * l_patchH*net.k_patchH * 3;
             net.k_bottle0 = floor(net.m_in / m_in_int) * m_in_int;
-
             net.k_bottle = floor(m_in_int * bottle_coeff);
-            net.k_bottle1a = floor(net.k_bottle * bottle_coeff1a);
-            net.k_bottle1b = floor(net.k_bottle1a * bottle_coeff1b);
-            net.k_bottle2 = floor(net.k_bottle1b * bottle_coeff2);
+            net.k_bottle2 = floor(m_in_int * bottle_coeff * bottle_coeff2);
 
             net.k_hid1 = net.k_bottle2*net.n_out;
             net.k_hid2 = floor(2*net.n_out*net.k_bottle2 + 1);
 
-            net.name = "residualVis3x3bTransAeBase2d";
+            net.name = "vis4x4x3bTransAeBase2d";
 
         end
 

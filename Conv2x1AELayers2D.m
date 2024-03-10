@@ -13,7 +13,9 @@ classdef Conv2x1AELayers2D
             layers = [
                 featureInputLayer(net.m_in)
 
-                conv2x1Layer(28, 28, 7, 7, 1, 1, 10, 'conv2x1')
+                fullyConnectedLayer(28*28,'Name','inputFeatureExt')
+
+                conv2x1Layer(28, 28, 7, 7, 7, 7, 10, 'conv2x1')
 
 
                 fullyConnectedLayer(net.k_bottle,'Name','FeatureBottle') 

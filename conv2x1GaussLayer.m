@@ -1,4 +1,4 @@
-classdef conv2x1Layer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
+classdef conv2x1GaussLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
 
     properties
         % (Optional) Layer properties.
@@ -43,7 +43,7 @@ classdef conv2x1Layer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
     %end
 
     methods
-        function layer = conv2x1Layer(numImgV, numImgH, fSizeX, fSizeY, fStrideX, fStrideY, nFilters, name)
+        function layer = conv2x1GaussLayer(numImgV, numImgH, fSizeX, fSizeY, fStrideX, fStrideY, nFilters, name)
             % (Optional) Create a myLayer.
             % This function must have the same name as the class.
 
@@ -70,6 +70,20 @@ classdef conv2x1Layer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
             layer.M = zeros([layer.fLen, layer.numInChannels*layer.numOutChannels]);
 
 
+            %Gauss filter
+            uX = fSizeX/2;
+            uY = fSizeY/2;
+            sR2 = 0;
+            nR = 0;
+            for m=1:fSizeY
+                for n=1:fSizeX
+                    sR2 = sR2 + (n-0.5 - uX)*(n-0.5 - uX) + (m-0.5 - uY)*(m-0.5 - uY);
+                    nR = nR +1;
+                end
+            end
+            varR = sR2/nR;
+            sigR = sqrt(varR);
+
             %Fill the Mask
             cntI = 0;
             for yF=1:fStrideY:(numImgV-fSizeY+1)
@@ -87,7 +101,7 @@ classdef conv2x1Layer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
 
                             p = pI + pF + (n-1) + (m-1)*numImgH;
 
-                            layer.M(i, p) = 1;
+                            layer.M(i, p) = 1/(sqrt(2*pi)*sigR)*exp(-((n-0.5 - uX)*(n-0.5 - uX) + (m-0.5 - uY)*(m-0.5 - uY))/(2*varR));
 
                         end
                     end
