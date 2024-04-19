@@ -16,27 +16,32 @@ classdef residualVis3x3BTransAEBaseLayers2D
             fSizeY = 7;
             fStrideX = 1;
             fStrideY = 1;
-            conOut = ceil((h - fSizeX + 1)/fStrideX) * ceil((h - fSizeY + 1)/fStrideY);
+            conOut = ceil((h - fSizeX + 1)/fStrideX) * ceil((v - fSizeY + 1)/fStrideY);
 
             layers = [
                 featureInputLayer(net.m_in)
 
-                %residualCosPeTransformerLayer(net.m_in, net.k_inject, "PETrans")
-                %residualFCLayer(net.m_in+net.k_inject, net.k_bottle0, net.k_inject, 'inputFeatureExt')
-                residualVis1x1CosPcTransformerLayer(net.m_in, net.k_inject, "PETrans")
+                %%residualCosPeTransformerLayer(net.m_in, net.k_inject, "PETrans")
+                %%residualFCLayer(net.m_in+net.k_inject, net.k_bottle0, net.k_inject, 'inputFeatureExt')
+
+                %residualVis1x1CosPcTransformerLayer(net.m_in, net.k_inject, "PETrans")
                 %residualFCLayer(net.m_in, net.k_bottle0, net.k_inject, 'inputFeatureExt')
 
-                residualConv2x1GaussLayer(v, h, fSizeX, fSizeY, fStrideX, fStrideY, 40, net.k_inject, 'conv2x1')
-                %residualConv2x1Layer(v, h, fSizeX, fSizeY, fStrideX, fStrideY, 40, net.k_inject, 'conv2x1')
-                residualFCLayer(conOut+net.k_inject, net.k_bottle0, net.k_inject, 'inputFeatureExt')
+                %residualConv2x1GaussLayer(v, h, fSizeX, fSizeY, fStrideX, fStrideY, 40, net.k_inject, 'conv2x1')
+                %%residualConv2x1Layer(v, h, fSizeX, fSizeY, fStrideX, fStrideY, 40, net.k_inject, 'conv2x1')
+                %residualFCLayer(conOut+net.k_inject, net.k_bottle0, net.k_inject, 'inputFeatureExt')
 
                 %residualFCLayer(net.m_in, net.k_bottle0, net.k_inject, 'inputFeatureExt')
 
-                residualVis3x3CosPcTransformerLayer(net.k_bottle0+net.k_inject, net.l_patchV, net.l_patchH, net.k_inject, "v_k_9")
+                %residualVis3x3CosPcTransformerLayer(net.k_bottle0+net.k_inject, net.l_patchV, net.l_patchH, net.k_inject, "VisPCTrans")
+
+                % no 'inputFeatureExt'
+                residualVis3x3CosPcTransformerMixLayer(net.m_in, net.l_patchV, net.l_patchH, net.k_inject, "VisPCTrans")
+                residualFCLayer(net.k_bottle0+net.k_inject*10, net.k_bottle, net.k_inject, 'FeatureBottle')
 
 
-                residualFCLayer(net.k_bottle0+net.k_inject, net.k_bottle, net.k_inject, 'FeatureBottle')
-                %residualFCLayer(net.k_bottle0+net.k_inject*2, net.k_bottle, net.k_inject, 'FeatureBottle')
+                %residualFCLayer(net.k_bottle0+net.k_inject, net.k_bottle, net.k_inject, 'FeatureBottle')
+
 
                 residualCosPcTransformerLayer(net.k_bottle+net.k_inject, net.k_inject, "PCTrans")
                 %residualCosPcTanhTransformerLayer(net.k_bottle+net.k_inject, net.k_inject, "PCTrans")

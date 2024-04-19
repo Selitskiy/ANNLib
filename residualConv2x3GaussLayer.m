@@ -1,4 +1,4 @@
-classdef LrReLUFCLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
+classdef residualConv2x3GaussLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
 
     properties
         % (Optional) Layer properties.
@@ -8,22 +8,34 @@ classdef LrReLUFCLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
         % Number input channels
         numInChannels
         numOutChannels
+        numResChannels
+
+        fSizeX
+        fSizeY
+        fStrideX
+        fStrideY
+        nFilters
+
+        fLen
+
+        %Mask
+        M
+
+        %X Mask
+        N
+
+        %Y Mask
+        O
 
     end
 
     properties (Learnable)
         % (Optional) Layer learnable parameters.
-
-        % Declare learnable parameters here.
-        A
-
-        slope
         
-        % Weights
-        W
-
-        %Bias
-        W0
+        % Filters' Weights
+        Wr
+        Wg
+        Wb
 
     end
 
@@ -41,7 +53,7 @@ classdef LrReLUFCLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
     %end
 
     methods
-        function layer = LrReLUFCLayer(numInChannels, numOutChannels, slope, name)
+        function layer = residualConv2x3GaussLayer(numImgV, numImgH, fSizeX, fSizeY, fStrideX, fStrideY, nFilters, numResChannels, name)
             % (Optional) Create a myLayer.
             % This function must have the same name as the class.
 
@@ -51,26 +63,80 @@ classdef LrReLUFCLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
             layer.Name = name;
 
             % Set layer description.
-            layer.Description = "LrReLU fullyConnected " + numInChannels + " channels";
+            layer.Description = "Convolution 2x1 " + numImgV*numImgH + " channels";
 
-            layer.numInChannels = numInChannels;
-            layer.numOutChannels = numOutChannels;
+            layer.numInChannels = numImgV * numImgH;
+            layer.numOutChannels = ceil((numImgH - fSizeX + 1)/fStrideX) * ceil((numImgV - fSizeY + 1)/fStrideY);
+            layer.numResChannels = numResChannels;
+
+            layer.fLen = fSizeX * fSizeY;
+            layer.nFilters = nFilters;
+            layer.fSizeX = fSizeX;
+            layer.fSizeY = fSizeY;
+            layer.fStrideX = fStrideX;
+            layer.fStrideY = fStrideY;
 
             % Initialize weight coefficients.
-            bound = sqrt(6 / (layer.numOutChannels + layer.numInChannels));
+            bound = sqrt(6 / (layer.fLen + layer.nFilters));
             
-            layer.W = bound * (2. * rand([layer.numOutChannels, layer.numInChannels],'single') - 1.);
-            layer.W0 = zeros([layer.numOutChannels, 1]);
+            layer.Wr = bound * (2. * rand([layer.nFilters, layer.fLen],'single') - 1.);
+            layer.Wg = bound * (2. * rand([layer.nFilters, layer.fLen],'single') - 1.);
+            layer.Wb = bound * (2. * rand([layer.nFilters, layer.fLen],'single') - 1.);
+
+            layer.M = zeros([layer.fLen, layer.numInChannels*layer.numOutChannels]);
 
 
-            layer.slope = slope;
+            layer.N = repmat(diag(ones([1,layer.numInChannels])), [1,layer.numOutChannels]);
 
-            % Initialize scaling coefficient.
-            if slope == 0
-                layer.A = rand([layer.numOutChannels, layer.numInChannels]);
-            else
-                layer.A = ones([layer.numOutChannels, layer.numInChannels]) * slope;
+            layer.O = zeros([layer.numInChannels*layer.numOutChannels, layer.numOutChannels]);
+
+            %Y Mask init
+            for i=1:layer.numOutChannels
+                for j=1:layer.numInChannels
+                    layer.O((i-1)*layer.numInChannels+j, i) = 1;
+                end
             end
+
+
+            %Gauss filter
+            uX = fSizeX/2;
+            uY = fSizeY/2;
+            sR2 = 0;
+            nR = 0;
+            for m=1:fSizeY
+                for n=1:fSizeX
+                    sR2 = sR2 + (n-0.5 - uX)*(n-0.5 - uX) + (m-0.5 - uY)*(m-0.5 - uY);
+                    nR = nR +1;
+                end
+            end
+            varR = sR2/nR;
+            sigR = sqrt(varR);
+
+
+            %Fill the Mask
+            cntI = 0;
+            for yF=1:fStrideY:(numImgV-fSizeY+1)
+                for xF=1:fStrideX:(numImgH-fSizeX+1)
+
+                    pF = (yF-1)*numImgH + xF;
+
+                    pI = cntI * layer.numInChannels;
+                    cntI = cntI + 1;
+
+                    for m=1:fSizeY
+                        for n=1:fSizeX
+
+                            i = (m-1)*fSizeX + n;
+
+                            p = pI + pF + (n-1) + (m-1)*numImgH;
+
+                            layer.M(i, p) = 1/(sqrt(2*pi)*sigR)*exp(-((n-0.5 - uX)*(n-0.5 - uX) + (m-0.5 - uY)*(m-0.5 - uY))/(2*varR));
+
+                        end
+                    end
+                end
+            end
+           
 
 
         end
@@ -98,13 +164,41 @@ classdef LrReLUFCLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
             % c - channels, n - observations
             [c, n] = size(X);
 
+            %red
+            cOff = ceil(layer.numInChannels)*0;
 
-            layer.A(layer.A > layer.slope) = layer.slope;
-            layer.A(layer.A < 0) = 0;
+            %F1r = layer.Wr * layer.M;
+            %F1r = sum(Fr,1);
+            %Xfr = (X(cOff+1:cOff+layer.numInChannels,:)' *layer.N);
+            %Yfr = (X(cOff+1:cOff+layer.numInChannels,:)' *layer.N) .* (layer.Wr * layer.M);
+            Yr = (((X(cOff+1:cOff+layer.numInChannels,:)' *layer.N) .* (layer.Wr * layer.M)) * layer.O)';
 
-            PM = X>=0;
+            %green
+            cOff = ceil(layer.numInChannels)*1;
 
-            Z = (layer.W .* layer.A) * (X .* PM) + layer.W0;
+            %F1g = layer.Wg * layer.M;
+            %F1g = sum(Fg,1);
+            %Xfg = (X(cOff+1:cOff+layer.numInChannels,:)' *layer.N);
+            %Yfg = Xfg .* F1g;
+            %Yg = (Yfg * layer.O)';
+            Yg = (((X(cOff+1:cOff+layer.numInChannels,:)' *layer.N) .* (layer.Wg * layer.M)) * layer.O)';
+
+            %blue
+            cOff = ceil(layer.numInChannels)*2;
+
+            %F1b = layer.Wb * layer.M;
+            %F1b = sum(Fb,1);
+            %Xfb = (X(cOff+1:cOff+layer.numInChannels,:)' *layer.N);
+            %Yfb = Xfb .* F1b;
+            %Yb = (Yfb * layer.O)';
+            Yb = (((X(cOff+1:cOff+layer.numInChannels,:)' *layer.N) .* (layer.Wb * layer.M)) * layer.O)';
+
+
+            Z = Yr;
+            Z = vertcat(Z, Yg);
+            Z = vertcat(Z, Yb);
+
+            Z = vertcat(Z, X(cOff+layer.numInChannels+1:cOff+layer.numInChannels+layer.numResChannels,:));
 
 
             %fprintf('state c=%d n=%d\n', c, n);

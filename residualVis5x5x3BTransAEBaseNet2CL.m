@@ -1,4 +1,4 @@
-classdef residualVis4x4x3BTransAEBaseNet2D < residualVis4x4x3BTransAEBaseLayers2D & BaseNet2D & MLPInputNet2D
+classdef residualVis5x5x3BTransAEBaseNet2CL < residualVis5x5x3BTransAEBaseLayers2CL & BaseNet2D & MLPInputNet2D
 
     properties
         k_bottle0
@@ -7,6 +7,8 @@ classdef residualVis4x4x3BTransAEBaseNet2D < residualVis4x4x3BTransAEBaseLayers2
         k_bottle1a
         k_bottle1b
         k_bottle1c
+        k_bottle1d
+        k_bottle1e
         k_bottle2
         k_inject
         k_patchV
@@ -17,15 +19,15 @@ classdef residualVis4x4x3BTransAEBaseNet2D < residualVis4x4x3BTransAEBaseLayers2
     end
 
     methods
-        function net = residualVis4x4x3BTransAEBaseNet2D(x_off, x_in, t_in, y_off, y_out, t_out, ini_rate, max_epoch,...
+        function net = residualVis5x5x3BTransAEBaseNet2CL(x_off, x_in, t_in, y_off, y_out, t_out, ini_rate, max_epoch,...
                 bottle_coeff, bottle_coeff1a, bottle_coeff1b, bottle_coeff2, l_patchV, l_patchH, k_inject, hid2_coeff)
 
             net = net@BaseNet2D(x_off, x_in, t_in, y_off, y_out, t_out, ini_rate, max_epoch);
             net = net@MLPInputNet2D();
-            net = net@residualVis4x4x3BTransAEBaseLayers2D();
+            net = net@residualVis5x5x3BTransAEBaseLayers2CL();
 
-            net.k_patchV = 4;
-            net.k_patchH = 4;
+            net.k_patchV = 5;
+            net.k_patchH = 5;
 
             net.l_patchV = l_patchV;
             net.l_patchH = l_patchH;
@@ -35,23 +37,37 @@ classdef residualVis4x4x3BTransAEBaseNet2D < residualVis4x4x3BTransAEBaseLayers2
             m_in_int = l_patchV*net.k_patchV * l_patchH*net.k_patchH * 3;
             net.k_bottle0 = floor(net.m_in / m_in_int) * m_in_int;
 
-            m_in_int_bw = l_patchV*3 * l_patchH*3;
+            m_in_int_bw = 18*net.k_patchV * 18*net.k_patchV;
             net.k_bottle0bw = m_in_int_bw;
 
-            net.k_bottle = floor(net.k_bottle0bw * bottle_coeff);
+            %net.k_bottle = floor(net.k_bottle0bw * bottle_coeff);
+            m_in_int_3 = 16*3 * 16*3;
+            net.k_bottle = m_in_int_3;
 
-            net.k_bottle1a = floor(net.k_bottle * bottle_coeff1a);
-            net.k_bottle1b = floor(net.k_bottle1a * bottle_coeff1b);
-            net.k_bottle1c = floor(net.k_bottle1b * bottle_coeff2);
+            %net.k_bottle1a = floor(net.k_bottle * bottle_coeff1a);
+            m_in_int_2 = 14*2 * 14*2;
+            net.k_bottle1a = m_in_int_2;
+
+            %net.k_bottle1b = floor(net.k_bottle1a * bottle_coeff1b);
+            m_in_int_2b = 12*2 * 12*2;
+            net.k_bottle1b = m_in_int_2b;
+
+            %net.k_bottle1c = floor(net.k_bottle1b * bottle_coeff2);
+            m_in_int_2c = 7*2 * 7*2;
+            net.k_bottle1c = m_in_int_2c;
+
+
+            net.k_bottle1d = floor(net.k_bottle1c * bottle_coeff2);
+            net.k_bottle1e = floor(net.k_bottle1d * bottle_coeff2);
 
             %net.k_bottle2 = floor(net.k_bottle1b * bottle_coeff2);
             net.k_bottle2 = floor(net.k_inject);
 
             net.k_hid1 = net.k_bottle2*net.n_out;
             %net.k_hid2 = floor(2*net.n_out*net.k_bottle2*hid2_coeff + 1);
-            net.k_hid2 = floor((2*net.n_out*net.k_bottle2*hid2_coeff + 1)/16) * 16;
+            net.k_hid2 = floor(2*net.m_in*net.k_bottle2*hid2_coeff + 1);
 
-            net.name = "residualVis4x4x3bTransAeBase2d";
+            net.name = "residualVis5x5x3BTransAeBase2cl";
 
         end
 

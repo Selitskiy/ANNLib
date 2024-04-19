@@ -20,6 +20,12 @@ classdef residualConv2x1GaussLayer < nnet.layer.Layer % & nnet.layer.Formattable
 
         %Mask
         M
+
+        %X Mask
+        N
+
+        %Y Mask
+        O
     end
 
     properties (Learnable)
@@ -73,6 +79,17 @@ classdef residualConv2x1GaussLayer < nnet.layer.Layer % & nnet.layer.Formattable
             layer.W = bound * (2. * rand([layer.nFilters, layer.fLen],'single') - 1.);
 
             layer.M = zeros([layer.fLen, layer.numInChannels*layer.numOutChannels]);
+
+            layer.N = repmat(diag(ones([1,layer.numInChannels])), [1,layer.numOutChannels]);
+
+            layer.O = zeros([layer.numInChannels*layer.numOutChannels, layer.numOutChannels]);
+
+            %Y Mask init
+            for i=1:layer.numOutChannels
+                for j=1:layer.numInChannels
+                    layer.O((i-1)*layer.numInChannels+j, i) = 1;
+                end
+            end
 
 
             %Gauss filter
@@ -141,11 +158,17 @@ classdef residualConv2x1GaussLayer < nnet.layer.Layer % & nnet.layer.Formattable
             % c - channels, n - observations
             [c, n] = size(X);
 
-            F = reshape(layer.W * layer.M, [layer.nFilters, layer.numInChannels, layer.numOutChannels]);
+            %F = reshape(layer.W * layer.M, [layer.nFilters, layer.numInChannels, layer.numOutChannels]);
+            %F1 = reshape(sum(F,1), [layer.numInChannels, layer.numOutChannels]);
 
-            F1 = reshape(sum(F,1), [layer.numInChannels, layer.numOutChannels]);
+            F = layer.W * layer.M;
+            F1 = sum(F,1);
 
-            Y = (X(1:layer.numInChannels,:)' * F1)';
+            Xf = (X(1:layer.numInChannels,:)' *layer.N);
+
+            Yf = Xf .* F1;
+            Y = (Yf * layer.O)';
+
 
             Z = vertcat(Y, X(layer.numInChannels+1:layer.numInChannels+layer.numResChannels,:));
 

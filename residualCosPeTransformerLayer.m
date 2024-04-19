@@ -89,8 +89,8 @@ classdef residualCosPeTransformerLayer < nnet.layer.Layer % & nnet.layer.Formatt
             [c, n] = size(X);
 
 
-            K = tanh(layer.Wk * X + layer.Wk0);
-            Q = tanh(layer.Wq * X + layer.Wq0);
+            K = layer.Wk * X + layer.Wk0;
+            Q = layer.Wq * X + layer.Wq0;
 
             DK2 = sum(K .* K, 1);
             DQ2 = sum(Q .* Q, 1);

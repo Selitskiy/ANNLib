@@ -7,7 +7,6 @@ classdef residualVis3x3CosPcTransformerMixLayer < nnet.layer.Layer % & nnet.laye
 
         % Number input channels
         numInChannels
-        %numOutChannels
         numResChannels
 
         numPatch
@@ -104,16 +103,15 @@ classdef residualVis3x3CosPcTransformerMixLayer < nnet.layer.Layer % & nnet.laye
             layer.Name = name;
 
             % Set layer description.
-            layer.Description = "Visual 3x3 Transformer" + numPatchV*numPatchH + " channels";
+            layer.Description = "Residual Mix Visual 3x3x1 Cosine Primary Components Transformer" + numPatchV*numPatchH + " channels";
 
             layer.numPatch = numPatchV * numPatchH;
-            layer.numInChannels = numInChannels; %9 * layer.numPatch;
-            %layer.numOutChannels = layer.numInChannels;
+            layer.numInChannels = numInChannels; 
             layer.numResChannels = numResChannels;
 
             % Initialize weight coefficients.
-            bound = sqrt(6 / (layer.numPatch + layer.numPatch));
-            boundRes = sqrt(6 / (layer.numResChannels + layer.numResChannels));
+            bound = sqrt(6 / (layer.numPatch + layer.numPatch + layer.numResChannels*2));
+            %boundRes = sqrt(6 / (layer.numResChannels + layer.numResChannels));
             
             layer.Wq1 = bound * (2. * rand([layer.numPatch+layer.numResChannels, layer.numPatch+layer.numResChannels],'single') - 1.);
             layer.Wq01 = zeros([layer.numPatch+layer.numResChannels, 1]);
@@ -159,12 +157,6 @@ classdef residualVis3x3CosPcTransformerMixLayer < nnet.layer.Layer % & nnet.laye
             layer.Wq09 = zeros([layer.numPatch+layer.numResChannels, 1]);
             layer.Wk9 = bound * (2. * rand([layer.numPatch+layer.numResChannels, layer.numPatch+layer.numResChannels],'single') - 1.);
             layer.Wk09 = zeros([layer.numPatch+layer.numResChannels, 1]);
-
-
-            %layer.Wqr = boundRes * (2. * rand([layer.numResChannels, layer.numResChannels],'single') - 1.);
-            %layer.Wq0r = zeros([layer.numResChannels, 1]);
-            %layer.Wkr = boundRes * (2. * rand([layer.numResChannels, layer.numResChannels],'single') - 1.);
-            %layer.Wk0r = zeros([layer.numResChannels, 1]);
 
 
         end
