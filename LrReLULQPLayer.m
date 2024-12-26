@@ -1,4 +1,4 @@
-classdef LrReLUQLayer < nnet.layer.Layer %& nnet.layer.Acceleratable % & nnet.layer.Formattable (Optional)
+classdef LrReLULQPLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer.Acceleratable %(Optional)
 
     properties
         % (Optional) Layer properties.
@@ -6,7 +6,7 @@ classdef LrReLUQLayer < nnet.layer.Layer %& nnet.layer.Acceleratable % & nnet.la
         % Declare layer properties here.
 
         % Number input (p) channels
-        %numInChannels
+        numInChannels
         % Number output (q) channels
         numOutChannels
         % Output dimesiality (product of KANs)
@@ -21,6 +21,8 @@ classdef LrReLUQLayer < nnet.layer.Layer %& nnet.layer.Acceleratable % & nnet.la
 
         % Declare learnable parameters here.
         A
+        W
+        W0
 
     end
 
@@ -38,7 +40,7 @@ classdef LrReLUQLayer < nnet.layer.Layer %& nnet.layer.Acceleratable % & nnet.la
     %end
 
     methods
-        function layer = LrReLUQLayer(name, numOutChannels, numOutProduct, slope)
+        function layer = LrReLULQPLayer(name, numInChannels, numOutChannels, numOutProduct, slope)
             % (Optional) Create a myLayer.
             % This function must have the same name as the class.
 
@@ -48,19 +50,26 @@ classdef LrReLUQLayer < nnet.layer.Layer %& nnet.layer.Acceleratable % & nnet.la
             layer.Name = name;
 
             % Set layer description.
-            layer.Description = "LReLU large Phi q KAN layer";
+            layer.Description = "Linear+LReLU small phi qp KAN layer";
 
-            %layer.numInChannels = numInChannels;
+            layer.numInChannels = numInChannels;
             layer.numOutChannels = numOutChannels;
             layer.numOutProduct = numOutProduct;
 
             layer.slope = slope;
 
+            bound = sqrt(6 / (numOutChannels*numOutProduct + numInChannels));
+            layer.W = bound * (2. * rand([numInChannels, numOutChannels*numOutProduct],'single') - 1.);
+            layer.W0 = bound * (2. * rand([numInChannels, numOutChannels*numOutProduct],'single') - 1.);
+
             % Initialize scaling coefficient.
             if slope == 0
-                layer.A = rand([1 numOutChannels numOutProduct]);
+                layer.A = rand([numInChannels, numOutChannels*numOutProduct],'single');
             else
-                layer.A = ones([1 numOutChannels numOutProduct]) * slope;
+                layer.A = ones([numInChannels, numOutChannels*numOutProduct],'single') * slope;
+
+                %DEBUG
+                %layer.A(numOutChannels+1:end, :) = 0.;
             end
 
         end
@@ -86,21 +95,29 @@ classdef LrReLUQLayer < nnet.layer.Layer %& nnet.layer.Acceleratable % & nnet.la
 
             % Define layer predict function here.
 
-            [c, n, p] = size(X);
+            [p, qn, b] = size(X);
 
-            X1 = reshape(X, layer.numOutChannels, layer.numOutProduct, []);
-            X2 = permute(X1, [1,3,2]);
+            Y = layer.W .* X + layer.W0;
 
             layer.A(layer.A > layer.slope) = layer.slope;
             layer.A(layer.A < 0) = 0;
 
-            PM = X2>=0;
+            %DEBUG
+            %layer.A(layer.numOutChannels+1:end, :) = 0.;
 
-            Z1 = pagemtimes(layer.A, X2 .* PM);
-            Z2 = reshape(Z1, [], layer.numOutProduct);
-            Z = permute(Z2, [2,1]);
+            PM = Y>=0;
 
-            %Z = layer.A .* X .* PM;
+            Y1 = Y .* PM;
+            %X1 = repmat(X .* PM, [1,1,layer.numOutProduct]);
+            %Z = pagemtimes(layer.A, X1);
+            %Z = tensorprod(layer.A, X .* PM, 2, 1);
+            Z = layer.A .* Y1;
+
+            % Reshape
+            %Z = reshape(Y, layer.numOutChannels, [], layer.numOutProduct);
+            
+            % Relabel
+            %Z = dlarray(Z,'SBC');
 
         end
 
