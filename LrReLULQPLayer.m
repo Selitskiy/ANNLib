@@ -97,7 +97,7 @@ classdef LrReLULQPLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer
 
             [p, qn, b] = size(X);
 
-            Y = layer.W .* X + layer.W0;
+            Y = (layer.W .* X) + layer.W0;
 
             layer.A(layer.A > layer.slope) = layer.slope;
             layer.A(layer.A < 0) = 0;
@@ -107,11 +107,8 @@ classdef LrReLULQPLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer
 
             PM = Y>=0;
 
-            Y1 = Y .* PM;
-            %X1 = repmat(X .* PM, [1,1,layer.numOutProduct]);
-            %Z = pagemtimes(layer.A, X1);
-            %Z = tensorprod(layer.A, X .* PM, 2, 1);
-            Z = layer.A .* Y1;
+            Y = Y .* PM;
+            Z = layer.A .* Y;
 
             % Reshape
             %Z = reshape(Y, layer.numOutChannels, [], layer.numOutProduct);

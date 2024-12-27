@@ -1,4 +1,4 @@
-classdef QSumLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer.Acceleratable %(Optional)
+classdef PSumLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer.Acceleratable %(Optional)
 
     properties
         % (Optional) Layer properties.
@@ -43,7 +43,7 @@ classdef QSumLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer.Acce
     %end
 
     methods
-        function layer = QSumLayer(name, numInChannels, numOutChannels, numOutProduct)
+        function layer = PSumLayer(name, numInChannels, numOutChannels, numOutProduct)
             % (Optional) Create a myLayer.
             % This function must have the same name as the class.
 
@@ -53,7 +53,7 @@ classdef QSumLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer.Acce
             layer.Name = name;
 
             % Set layer description.
-            layer.Description = "Phi Q function sum layer";
+            layer.Description = "phi QP function sum layer";
 
             %layer.Q = Q;
             %layer.numOutChannels = numOutChannels;
@@ -89,13 +89,12 @@ classdef QSumLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer.Acce
 
             X = stripdims(X);
             Y = pagemtimes(layer.S, X);
-            %Y = layer.S * X;
 
-            Z = reshape(Y, layer.numOutProduct, []);
+            Z = reshape(Y, layer.numOutChannels, layer.numOutProduct, []);
             %Z = permute(Y, [2,3]);
 
             % Relabel
-            Z = dlarray(Z,'CB');
+            Z = dlarray(Z,'SCB');
 
 
 

@@ -81,7 +81,8 @@ classdef QExpansionLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.laye
 
             [c, n] = size(X);
 
-            Z = repmat(X, [1,layer.numOutChannels*layer.numOutProduct,1]);
+            Z = repmat(stripdims(X), [1,1,layer.numOutChannels*layer.numOutProduct]);
+            Z = permute(Z, [1,3,2]);
 
             % Relabel
             Z = dlarray(Z,'SCB');
