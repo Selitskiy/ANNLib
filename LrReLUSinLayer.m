@@ -1,4 +1,4 @@
-classdef QSumLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer.Acceleratable %(Optional)
+classdef LrReLUSinLayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
 
     properties
         % (Optional) Layer properties.
@@ -6,22 +6,18 @@ classdef QSumLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer.Acce
         % Declare layer properties here.
 
         % Number input channels
-        %Q
-        %numInChannels
-        %numOutChannels
-
-        % Number input (p) channels
         numInChannels
-        % Number output (q) channels
-        numOutChannels
-        % Output dimesiality (product of KANs)
-        numOutProduct
-
-        S
+        %numOutChannels
     end
 
     properties (Learnable)
         % (Optional) Layer learnable parameters.
+
+        % Declare learnable parameters here.
+        A
+
+        slope
+        %B
         
         % Weights
         %W
@@ -43,7 +39,7 @@ classdef QSumLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer.Acce
     %end
 
     methods
-        function layer = QSumLayer(name, numInChannels, numOutChannels, numOutProduct)
+        function layer = LrReLUSinLayer(name, numInChannels, slope) %, numOutChannels)
             % (Optional) Create a myLayer.
             % This function must have the same name as the class.
 
@@ -53,15 +49,30 @@ classdef QSumLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer.Acce
             layer.Name = name;
 
             % Set layer description.
-            layer.Description = "Phi Q function sum layer";
+            layer.Description = "LReLU layer";
 
-            %layer.Q = Q;
-            %layer.numOutChannels = numOutChannels;
             layer.numInChannels = numInChannels;
-            layer.numOutChannels = numOutChannels;
-            layer.numOutProduct = numOutProduct;
+            %layer.numOutChannels = numOutChannels;
 
-            layer.S = ones([1, numInChannels],'single');
+            layer.slope = slope;
+
+            % Initialize scaling coefficient.
+            if slope == 0
+                layer.A = rand([numInChannels 1],'single');
+            else
+                layer.A = ones([numInChannels 1],'single') * slope;
+            end
+
+            %layer.An = rand([numInChannels 1]); 
+
+            % Initialize weight coefficients.
+            %layer.W = rand([layer.numOutChannels, layer.numInChannels]);
+            %bound = sqrt(6 / (layer.numOutChannels + layer.numInChannels));
+            %layer.W = bound * (2. * rand([layer.numOutChannels, layer.numInChannels],'single') - 1.);
+
+            %layer.W0 = rand([layer.numOutChannels, 1]);
+            %layer.W0 = zeros([layer.numOutChannels, 1]);
+
         end
 
         function Z = predict(layer, X)
@@ -85,26 +96,20 @@ classdef QSumLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer.Acce
 
             % Define layer predict function here.
 
-            [p, qn, b] = size(X);
+            [c, n] = size(X);
 
-            %X = stripdims(X);
-            %Y = pagemtimes(layer.S, X);
-            %%Y = layer.S * X;
+            %layer.A(layer.A > layer.slope) = layer.slope;
+            %layer.A(layer.A < 0) = 0;
 
-            Z = reshape(pagemtimes(layer.S, stripdims(X)), layer.numOutProduct, []);
+            %%PM = X>=0;
+            %%Z = layer.A .* X .* PM;
+            %Z = sin(layer.A .* X .* (X>=0));
 
-            % Relabel
-            Z = dlarray(Z,'CB');
+            %Y = layer.A .* X;
+            %PM1 = Y<=2*pi;
+            %PM2 = Y>0;
 
-
-
-            %s = floor(c/layer.Q);
-            %%Z = dlarray(zeros([layer.Q, n], 'single'));
-            %Z = zeros([layer.Q, n], 'like', X);
-
-            %for i = 1:layer.Q
-            %    Z(i,:) = sum(X((i-1)*s+1:i*s, :), 1);
-            %end
+            Z = sin(layer.A .* X); % .* (X>=0));
 
         end
 

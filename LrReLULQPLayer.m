@@ -40,7 +40,7 @@ classdef LrReLULQPLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer
     %end
 
     methods
-        function layer = LrReLULQPLayer(name, numInChannels, numOutChannels, numOutProduct, slope)
+        function layer = LrReLUSinQPLayer(name, numInChannels, numOutChannels, numOutProduct, slope)
             % (Optional) Create a myLayer.
             % This function must have the same name as the class.
 
@@ -50,7 +50,7 @@ classdef LrReLULQPLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer
             layer.Name = name;
 
             % Set layer description.
-            layer.Description = "Linear+LReLU small phi qp KAN layer";
+            layer.Description = "Sin small phi qp KAN layer";
 
             layer.numInChannels = numInChannels;
             layer.numOutChannels = numOutChannels;
@@ -105,10 +105,12 @@ classdef LrReLULQPLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer
             %DEBUG
             %layer.A(layer.numOutChannels+1:end, :) = 0.;
 
-            PM = Y>=0;
+            %PM = Y>=0;
 
-            Y = Y .* PM;
-            Z = layer.A .* Y;
+            %Y = Y .* PM;
+            %Z = layer.A .* Y;
+            Z = layer.A .* Y .* (Y>=0);
+
 
             % Reshape
             %Z = reshape(Y, layer.numOutChannels, [], layer.numOutProduct);

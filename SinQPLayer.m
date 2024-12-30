@@ -1,14 +1,9 @@
-classdef QSumLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer.Acceleratable %(Optional)
+classdef SinQPLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer.Acceleratable %(Optional)
 
     properties
         % (Optional) Layer properties.
 
         % Declare layer properties here.
-
-        % Number input channels
-        %Q
-        %numInChannels
-        %numOutChannels
 
         % Number input (p) channels
         numInChannels
@@ -17,16 +12,18 @@ classdef QSumLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer.Acce
         % Output dimesiality (product of KANs)
         numOutProduct
 
-        S
+        % Maximal (initial) ReLU slope
+        %Tmp
     end
 
     properties (Learnable)
         % (Optional) Layer learnable parameters.
-        
-        % Weights
-        %W
-        %Bias
-        %W0
+
+        % Declare learnable parameters here.
+        A
+        W
+        W0
+
     end
 
     %properties (State)
@@ -43,7 +40,7 @@ classdef QSumLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer.Acce
     %end
 
     methods
-        function layer = QSumLayer(name, numInChannels, numOutChannels, numOutProduct)
+        function layer = SinQPLayer(name, numInChannels, numOutChannels, numOutProduct)
             % (Optional) Create a myLayer.
             % This function must have the same name as the class.
 
@@ -53,15 +50,30 @@ classdef QSumLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer.Acce
             layer.Name = name;
 
             % Set layer description.
-            layer.Description = "Phi Q function sum layer";
+            layer.Description = "Sin small phi qp KAN layer";
 
-            %layer.Q = Q;
-            %layer.numOutChannels = numOutChannels;
             layer.numInChannels = numInChannels;
             layer.numOutChannels = numOutChannels;
             layer.numOutProduct = numOutProduct;
 
-            layer.S = ones([1, numInChannels],'single');
+
+            bound = sqrt(6 / (numOutChannels*numOutProduct + numInChannels));
+            layer.W = pi * rand([numInChannels, numOutChannels*numOutProduct],'single');
+            layer.W0 = pi * rand([numInChannels, numOutChannels*numOutProduct],'single');
+
+            %layer.Tmp = zeros([numInChannels, numOutChannels*numOutProduct],'single');
+
+            layer.A = bound * (2. * rand([numInChannels, numOutChannels*numOutProduct],'single') - 1.);
+            % Initialize scaling coefficient.
+            %if slope == 0
+            %    layer.A = rand([numInChannels, numOutChannels*numOutProduct],'single');
+            %else
+            %    layer.A = ones([numInChannels, numOutChannels*numOutProduct],'single') * slope;
+
+                %DEBUG
+                %layer.A(numOutChannels+1:end, :) = 0.;
+            %end
+
         end
 
         function Z = predict(layer, X)
@@ -87,24 +99,27 @@ classdef QSumLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer.Acce
 
             [p, qn, b] = size(X);
 
-            %X = stripdims(X);
-            %Y = pagemtimes(layer.S, X);
-            %%Y = layer.S * X;
+            %twoPi = 2.*pi;
 
-            Z = reshape(pagemtimes(layer.S, stripdims(X)), layer.numOutProduct, []);
+            layer.W0(layer.W0 > pi) = pi;
+            layer.W0(layer.W0 < 0) = 0;
+            
+            layer.W(layer.W > pi) = pi;
+            layer.W(layer.W < 0) = 0;
 
+            %layer.Tmp = (-1 .* layer.W0 + twoPi) ./ X;
+            %Rep2 = (-1 .* layer.W0) ./ X;
+            %layer.W(((layer.W .* X) + layer.W0) > twoPi) = layer.Tmp(((layer.W .* X) + layer.W0) > twoPi); %Rep1(((layer.W .* X) + layer.W0) > twoPi);
+            %layer.W(((layer.W .* X) + layer.W0) < 0) = 0; %Rep2(((layer.W .* X) + layer.W0) < 0);
+
+            Z = layer.A .* sin((layer.W .* X) + layer.W0);
+
+
+            % Reshape
+            %Z = reshape(Y, layer.numOutChannels, [], layer.numOutProduct);
+            
             % Relabel
-            Z = dlarray(Z,'CB');
-
-
-
-            %s = floor(c/layer.Q);
-            %%Z = dlarray(zeros([layer.Q, n], 'single'));
-            %Z = zeros([layer.Q, n], 'like', X);
-
-            %for i = 1:layer.Q
-            %    Z(i,:) = sum(X((i-1)*s+1:i*s, :), 1);
-            %end
+            %Z = dlarray(Z,'SBC');
 
         end
 

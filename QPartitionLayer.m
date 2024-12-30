@@ -1,4 +1,4 @@
-classdef QSumLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer.Acceleratable %(Optional)
+classdef QPartitionLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer.Acceleratable %(Optional)
 
     properties
         % (Optional) Layer properties.
@@ -10,14 +10,10 @@ classdef QSumLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer.Acce
         %numInChannels
         %numOutChannels
 
-        % Number input (p) channels
-        numInChannels
         % Number output (q) channels
         numOutChannels
         % Output dimesiality (product of KANs)
         numOutProduct
-
-        S
     end
 
     properties (Learnable)
@@ -43,7 +39,7 @@ classdef QSumLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer.Acce
     %end
 
     methods
-        function layer = QSumLayer(name, numInChannels, numOutChannels, numOutProduct)
+        function layer = QPartitionLayer(name, numOutChannels, numOutProduct)
             % (Optional) Create a myLayer.
             % This function must have the same name as the class.
 
@@ -53,15 +49,13 @@ classdef QSumLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer.Acce
             layer.Name = name;
 
             % Set layer description.
-            layer.Description = "Phi Q function sum layer";
+            layer.Description = "Split Q functios into product channels";
 
             %layer.Q = Q;
             %layer.numOutChannels = numOutChannels;
-            layer.numInChannels = numInChannels;
             layer.numOutChannels = numOutChannels;
             layer.numOutProduct = numOutProduct;
 
-            layer.S = ones([1, numInChannels],'single');
         end
 
         function Z = predict(layer, X)
@@ -85,26 +79,15 @@ classdef QSumLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer.Acce
 
             % Define layer predict function here.
 
-            [p, qn, b] = size(X);
+            [c, n] = size(X);
 
             %X = stripdims(X);
-            %Y = pagemtimes(layer.S, X);
-            %%Y = layer.S * X;
 
-            Z = reshape(pagemtimes(layer.S, stripdims(X)), layer.numOutProduct, []);
+            Z = reshape(stripdims(X), layer.numOutChannels, layer.numOutProduct, []);
 
             % Relabel
-            Z = dlarray(Z,'CB');
+            Z = dlarray(Z,'SCB');
 
-
-
-            %s = floor(c/layer.Q);
-            %%Z = dlarray(zeros([layer.Q, n], 'single'));
-            %Z = zeros([layer.Q, n], 'like', X);
-
-            %for i = 1:layer.Q
-            %    Z(i,:) = sum(X((i-1)*s+1:i*s, :), 1);
-            %end
 
         end
 

@@ -58,9 +58,9 @@ classdef LrReLULayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
 
             % Initialize scaling coefficient.
             if slope == 0
-                layer.A = rand([numInChannels 1]);
+                layer.A = rand([numInChannels 1],'single');
             else
-                layer.A = ones([numInChannels 1]) * slope;
+                layer.A = ones([numInChannels 1],'single') * slope;
             end
 
             %layer.An = rand([numInChannels 1]); 
@@ -101,9 +101,10 @@ classdef LrReLULayer < nnet.layer.Layer % & nnet.layer.Formattable (Optional)
             layer.A(layer.A > layer.slope) = layer.slope;
             layer.A(layer.A < 0) = 0;
 
-            PM = X>=0;
+            %PM = X>=0;
+            %Z = layer.A .* X .* PM;
 
-            Z = layer.A .* X .* PM;
+            Z = layer.A .* X .* (X>=0);
 
         end
 

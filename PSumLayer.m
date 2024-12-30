@@ -87,11 +87,11 @@ classdef PSumLayer < nnet.layer.Layer & nnet.layer.Formattable & nnet.layer.Acce
 
             [p, qn, b] = size(X);
 
-            X = stripdims(X);
-            Y = pagemtimes(layer.S, X);
+            %X = stripdims(X);
+            %Y = pagemtimes(layer.S, stripdims(X));
 
-            Z = reshape(Y, layer.numOutChannels, layer.numOutProduct, []);
-            %Z = permute(Y, [2,3]);
+            %Z = reshape(Y, layer.numOutChannels, layer.numOutProduct, []);
+            Z = reshape(pagemtimes(layer.S, stripdims(X)), layer.numOutChannels, layer.numOutProduct, []);
 
             % Relabel
             Z = dlarray(Z,'SCB');
