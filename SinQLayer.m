@@ -97,10 +97,9 @@ classdef SinQLayer < nnet.layer.Layer %& nnet.layer.Formattable & nnet.layer.Acc
 
             [p, qn, b] = size(X);
 
-            twoPi = 2.*pi;
-
-            layer.W0(layer.W0 > twoPi) = twoPi;
-            layer.W0(layer.W0 < 0) = 0;
+            %twoPi = 2.*pi;
+            %layer.W0(layer.W0 > twoPi) = twoPi;
+            %layer.W0(layer.W0 < 0) = 0;
             
             %layer.W(layer.W > pi) = pi;
             %layer.W(layer.W < 0) = 0;
